@@ -84,7 +84,7 @@ export default function FitnessMap({ groups }) {
         </Marker>
 
         {/* Nearby Group Markers */}
-        {nearbyGroups.map(grp => (
+        {(nearbyGroups || []).map(grp => grp && grp.pos && (
           <Marker key={`grp-${grp.id}`} position={grp.pos} icon={groupIcon}>
             <Popup>
               <b>{grp.name}</b><br />
@@ -95,7 +95,7 @@ export default function FitnessMap({ groups }) {
         ))}
 
         {/* Nearby User Markers */}
-        {nearbyProfiles.map(usr => (
+        {(nearbyProfiles || []).map(usr => usr && usr.pos && (
           <Marker key={`usr-${usr.id}`} position={usr.pos} icon={nearbyUserIcon}>
             <Popup>
               <b>{usr.name}</b><br />
