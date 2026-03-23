@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,28 +14,35 @@ export default function AIAssistant() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
-  const generateAIResponse = (query) => {
-    const q = query.toLowerCase();
-    if (q.includes("hi") || q.includes("hello")) return "Hello superstar! How was your workout today?";
-    if (q.includes("fat") || q.includes("weight loss")) return "For fat loss, a mix of HIIT (High-Intensity Interval Training) and consistent zone-2 cardio is highly recommended by fitness experts! Need a challenge from our Challenges page?";
-    if (q.includes("muscle") || q.includes("bulk")) return "Muscle growth (hypertrophy) demands progressive overload. Try lifting heavier weights consistently and eat a high-protein diet (.8g to 1g per lb of bodyweight)!";
-    if (q.includes("recommend") && q.includes("group")) return "Check out your Dashboard map! I've automatically pinned the best groups located nearest to your exact GPS coordinates!";
-    if (q.includes("bmi")) return "BMI is calculated by your weight in kg divided by (height in meters squared). Check your precise score dynamically inside your Settings profile!";
-    if (q.includes("diet") || q.includes("food")) return "Nutrition is 80% of the battle! Prioritize whole foods, lean proteins, and complex carbs. Avoid processed sugars!";
-    return "That's a fantastic fitness question! Keep pushing your limits. Remember, consistency is the key to all results. Make sure you crush your daily step goals!";
-  };
-
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
     const userMessage = { text: input, sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     
-    // Simulate thinking delay
-    setTimeout(() => {
-      setMessages(prev => [...prev, { text: generateAIResponse(userMessage.text), sender: 'ai' }]);
-    }, 1000);
+    // Check if the API Key exists in the environment variables
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      setTimeout(() => {
+        setMessages(prev => [...prev, { text: "I'm ready to upgrade! Please add your VITE_GEMINI_API_KEY to the project environment variables before I can generate real AI responses.", sender: 'ai' }]);
+      }, 500);
+      return;
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `You are an elite, highly motivational fitness coach for the PaceBoard app. Answer this strictly in 2 to 3 concise sentences. Query: ${userMessage.text}`;
+      
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      
+      setMessages(prev => [...prev, { text: responseText, sender: 'ai' }]);
+    } catch(err) {
+      console.error(err);
+      setMessages(prev => [...prev, { text: "Oh no! My AI brain hit a snag. Please ensure your Gemini API Key is valid and active.", sender: 'ai' }]);
+    }
   };
 
   return (
