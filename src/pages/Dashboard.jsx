@@ -69,9 +69,9 @@ export default function Dashboard({ user }) {
 
       <div className="card glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--surface)' }}>
         <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-           <MapPin size={24} className="logo-icon" /> OpenStreetMap Community Tracker
+           <MapPin size={24} className="logo-icon" /> Your Location & Nearby Groups
         </h3>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Securely locating nearby fitness enthusiasts and groups via live browser geolocation.</p>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>View your current position and find active fitness communities in your area.</p>
         <FitnessMap groups={suggestedGroups} />
       </div>
 

@@ -62,7 +62,6 @@ export default function FitnessMap({ groups }) {
         style={{ width: '100%', height: '100%' }}
       >
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Marker position={position} icon={userIcon}>
