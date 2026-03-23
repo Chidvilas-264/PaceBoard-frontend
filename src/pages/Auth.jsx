@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function Auth({ setUser }) {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ name: '', username: '', phone: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -16,11 +17,13 @@ export default function Auth({ setUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       if (isForgotPassword) {
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
+          setIsLoading(false);
           return;
         }
         await axios.put('https://paceboard-backend.onrender.com/api/forgot-password', {
@@ -43,6 +46,7 @@ export default function Auth({ setUser }) {
       } else {
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
+          setIsLoading(false);
           return;
         }
         const res = await axios.post('https://paceboard-backend.onrender.com/api/register', formData);
@@ -56,6 +60,8 @@ export default function Auth({ setUser }) {
         ? respData 
         : (respData?.message || 'Invalid credentials or server error');
       setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,8 +117,9 @@ export default function Auth({ setUser }) {
             </div>
           )}
 
-          <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '1rem' }}>
-            {isForgotPassword ? 'Reset Password' : (isLogin ? 'Log In' : 'Sign Up')}
+          <button type="submit" disabled={isLoading} className="btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}>
+            {isLoading && <Loader2 size={20} className="animate-spin" />}
+            {isLoading ? (isForgotPassword ? 'Resetting...' : (isLogin ? 'Logging In...' : 'Signing Up...')) : (isForgotPassword ? 'Reset Password' : (isLogin ? 'Log In' : 'Sign Up'))}
           </button>
         </form>
         <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)' }}>
