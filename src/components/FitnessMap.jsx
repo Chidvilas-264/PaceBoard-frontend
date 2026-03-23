@@ -19,12 +19,14 @@ const userIcon = createIcon('blue');
 const groupIcon = createIcon('green');
 const nearbyUserIcon = createIcon('gold');
 
-// Component to dynamically fly to location
-function LocationMarker({ position }) {
+// Helper component to handle map movements
+function MapViewHandler({ center }) {
   const map = useMap();
   useEffect(() => {
-    if (position) map.flyTo(position, 13, { animate: true });
-  }, [position, map]);
+    if (center) {
+      map.flyTo(center, 13, { animate: true });
+    }
+  }, [center, map]);
   return null;
 }
 
@@ -71,36 +73,37 @@ export default function FitnessMap({ groups }) {
           {locationError}
         </div>
       )}
-      <MapContainer center={position} zoom={13} style={{ width: '100%', height: '100%' }}>
+      <MapContainer 
+        center={position} 
+        zoom={13} 
+        style={{ width: '100%', height: '100%' }}
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <LocationMarker position={position} />
+        <MapViewHandler center={position} />
         
-        {/* User Marker */}
         <Marker position={position} icon={userIcon}>
           <Popup><b>You are here!</b><br />Ready for a workout!</Popup>
         </Marker>
 
-        {/* Nearby Group Markers */}
         {(nearbyGroups || []).map(grp => grp && grp.pos && (
           <Marker key={`grp-${grp.id}`} position={grp.pos} icon={groupIcon}>
             <Popup>
-              <b>{grp.name}</b><br />
+              <b>{grp.name || 'Fitness Group'}</b><br />
               <span style={{color: 'green'}}>• Fitness Group</span><br/>
-              Activity: {grp.type}
+              Activity: {grp.type || 'Workout'}
             </Popup>
           </Marker>
         ))}
 
-        {/* Nearby User Markers */}
         {(nearbyProfiles || []).map(usr => usr && usr.pos && (
           <Marker key={`usr-${usr.id}`} position={usr.pos} icon={nearbyUserIcon}>
             <Popup>
-              <b>{usr.name}</b><br />
+              <b>{usr.name || 'User'}</b><br />
               <span style={{color: 'goldenrod'}}>• Local User</span><br/>
-              Specialty: {usr.activity}
+              Specialty: {usr.activity || 'Fitness'}
             </Popup>
           </Marker>
         ))}
