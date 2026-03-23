@@ -144,10 +144,10 @@ export default function Dashboard({ user }) {
               <div key={g.id} className="challenge-item">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ background: 'var(--primary)', color: 'white', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {g.name.charAt(0)}
+                    {(g.name || 'G').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 style={{ fontWeight: 600 }}>{g.name}</h4>
+                    <h4 style={{ fontWeight: 600 }}>{g.name || 'Fitness Group'}</h4>
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{g.totalMembers} Members</span>
                   </div>
                 </div>
