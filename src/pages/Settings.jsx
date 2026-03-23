@@ -30,6 +30,9 @@ export default function Settings({ user, setUser, setTheme, handleLogout }) {
     else { bmiCategory = 'Obese'; bmiColor = '#EF4444'; }
   }
 
+  const minIdeal = heightM > 0 ? (18.5 * heightM * heightM).toFixed(1) : 0;
+  const maxIdeal = heightM > 0 ? (24.9 * heightM * heightM).toFixed(1) : 0;
+
   if (!user) return <div>Please login first</div>;
 
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -74,6 +77,7 @@ export default function Settings({ user, setUser, setTheme, handleLogout }) {
               <div>
                  <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Body Mass Index (BMI)</h4>
                  <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '4px' }}>Healthy Safe Range: 18.5 - 24.9</p>
+                 <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.875rem', marginTop: '2px', fontWeight: 'bold' }}>Ideal Weight: {minIdeal} - {maxIdeal} kg</p>
               </div>
               <div style={{ textAlign: 'right' }}>
                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: bmiColor, lineHeight: 1 }}>{bmi}</div>
