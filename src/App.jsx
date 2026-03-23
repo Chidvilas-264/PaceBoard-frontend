@@ -13,6 +13,7 @@ import Leaderboard from './pages/Leaderboard';
 function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('paceboardUser')) || null);
   const location = useLocation();
+  const navigate = useNavigate();
   const path = location.pathname;
   const [theme, setTheme] = useState(user?.theme || 'light');
 
@@ -23,6 +24,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('paceboardUser');
     setUser(null);
+    navigate('/');
   };
 
   return (
