@@ -8,9 +8,27 @@ export default function Settings({ user, setUser, setTheme, handleLogout }) {
     email: user?.email || '',
     password: '',
     dailyStepGoal: user?.dailyStepGoal || 10000,
-    theme: user?.theme || 'light'
+    theme: user?.theme || 'light',
+    height: user?.height || '',
+    weight: user?.weight || '',
+    age: user?.age || '',
+    gender: user?.gender || '',
+    locality: user?.locality || '',
+    preferredActivity: user?.preferredActivity || 'Walk'
   });
   const [success, setSuccess] = useState('');
+
+  const heightM = formData.height ? formData.height / 100 : 0;
+  const bmi = heightM > 0 && formData.weight ? (formData.weight / (heightM * heightM)).toFixed(1) : null;
+  
+  let bmiCategory = '';
+  let bmiColor = '';
+  if (bmi) {
+    if (bmi < 18.5) { bmiCategory = 'Underweight'; bmiColor = '#3B82F6'; }
+    else if (bmi < 25) { bmiCategory = 'Healthy Weight'; bmiColor = '#10B981'; }
+    else if (bmi < 30) { bmiCategory = 'Overweight'; bmiColor = '#F59E0B'; }
+    else { bmiCategory = 'Obese'; bmiColor = '#EF4444'; }
+  }
 
   if (!user) return <div>Please login first</div>;
 
@@ -48,6 +66,62 @@ export default function Settings({ user, setUser, setTheme, handleLogout }) {
       )}
 
       <form onSubmit={handleSubmit} className="card glass-panel" style={{ padding: '2.5rem' }}>
+        
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Health & Fitness Metrics</h2>
+        
+        {bmi && (
+           <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', borderLeft: `4px solid ${bmiColor}`, background: 'var(--surface)' }}>
+              <div>
+                 <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Body Mass Index (BMI)</h4>
+                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '4px' }}>Healthy Safe Range: 18.5 - 24.9</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: bmiColor, lineHeight: 1 }}>{bmi}</div>
+                 <div style={{ fontSize: '0.875rem', fontWeight: 'bold', color: bmiColor, marginTop: '4px' }}>{bmiCategory}</div>
+              </div>
+           </div>
+        )}
+
+        <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 0, gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="form-group">
+            <label>Height (cm)</label>
+            <input type="number" name="height" value={formData.height} className="input-field" onChange={handleInputChange} />
+          </div>
+          <div className="form-group">
+            <label>Weight (kg)</label>
+            <input type="number" name="weight" value={formData.weight} className="input-field" onChange={handleInputChange} />
+          </div>
+          <div className="form-group">
+            <label>Age</label>
+            <input type="number" name="age" value={formData.age} className="input-field" onChange={handleInputChange} />
+          </div>
+          <div className="form-group">
+            <label>Gender</label>
+            <select name="gender" value={formData.gender} className="select-field" onChange={handleInputChange}>
+               <option value="Male">Male</option>
+               <option value="Female">Female</option>
+               <option value="Other">Other</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Locality</label>
+            <input type="text" name="locality" value={formData.locality} className="input-field" onChange={handleInputChange} />
+          </div>
+          <div className="form-group">
+            <label>Preferred Activity</label>
+            <select name="preferredActivity" value={formData.preferredActivity} className="select-field" onChange={handleInputChange}>
+                <option value="Walk">Walk</option>
+                <option value="Jog">Jog</option>
+                <option value="Run">Run</option>
+                <option value="Workout">Workout</option>
+                <option value="Yoga">Yoga</option>
+                <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: '2rem 0' }} />
+
         <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Account Details</h2>
         <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 0, gap: '1.5rem', marginBottom: '2rem' }}>
           <div className="form-group">
