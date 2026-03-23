@@ -35,7 +35,11 @@ export default function Auth({ setUser }) {
         navigate('/questionnaire');
       }
     } catch (err) {
-      setError(err.response?.data || 'Invalid credentials or server error');
+      const respData = err.response?.data;
+      const errorMessage = typeof respData === 'string' 
+        ? respData 
+        : (respData?.message || 'Invalid credentials or server error');
+      setError(errorMessage);
     }
   };
 
