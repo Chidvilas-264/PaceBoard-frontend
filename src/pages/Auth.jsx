@@ -16,7 +16,7 @@ export default function Auth({ setUser }) {
 
     try {
       if (isLogin) {
-        const res = await axios.post('/api/login', {
+        const res = await axios.post('https://paceboard-backend.onrender.com/api/login', {
           username: formData.username,
           password: formData.password
         });
@@ -29,7 +29,7 @@ export default function Auth({ setUser }) {
           setError('Passwords do not match');
           return;
         }
-        const res = await axios.post('/api/register', formData);
+        const res = await axios.post('https://paceboard-backend.onrender.com/api/register', formData);
         localStorage.setItem('paceboardUser', JSON.stringify(res.data));
         setUser(res.data);
         navigate('/questionnaire');

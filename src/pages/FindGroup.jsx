@@ -9,7 +9,7 @@ export default function FindGroup({ user }) {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const res = await axios.get(`/api/groups?${filter}=${filter === 'locality' ? user.locality : user.preferredActivity}`);
+        const res = await axios.get(`https://paceboard-backend.onrender.com/api/groups?${filter}=${filter === 'locality' ? user.locality : user.preferredActivity}`);
         setGroups(res.data);
       } catch (err) {
         console.error(err);

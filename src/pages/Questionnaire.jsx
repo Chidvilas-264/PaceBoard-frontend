@@ -18,7 +18,7 @@ export default function Questionnaire({ user, setUser }) {
       if (payload.preferredActivity === 'Other' && customActivity.trim() !== '') {
         payload.preferredActivity = customActivity.trim();
       }
-      const res = await axios.post(`/api/questionnaire/${user.id}`, payload);
+      const res = await axios.post(`https://paceboard-backend.onrender.com/api/questionnaire/${user.id}`, payload);
       localStorage.setItem('paceboardUser', JSON.stringify(res.data));
       setUser(res.data);
       navigate('/dashboard');

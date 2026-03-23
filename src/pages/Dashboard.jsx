@@ -17,7 +17,7 @@ export default function Dashboard({ user }) {
     }
     const fetchGroups = async () => {
       try {
-        const localityRes = await axios.get(`/api/groups?locality=${user.locality}`);
+        const localityRes = await axios.get(`https://paceboard-backend.onrender.com/api/groups?locality=${user.locality}`);
         setSuggestedGroups(localityRes.data);
       } catch (err) {
         console.error(err);

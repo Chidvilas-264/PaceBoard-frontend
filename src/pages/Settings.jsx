@@ -25,7 +25,7 @@ export default function Settings({ user, setUser, setTheme, handleLogout }) {
     e.preventDefault();
     setSuccess('');
     try {
-      const res = await axios.put(`/api/user/${user.id}`, formData);
+      const res = await axios.put(`https://paceboard-backend.onrender.com/api/user/${user.id}`, formData);
       localStorage.setItem('paceboardUser', JSON.stringify(res.data));
       setUser(res.data);
       setSuccess('Settings updated successfully!');
