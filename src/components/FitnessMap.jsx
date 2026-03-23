@@ -17,24 +17,11 @@ const createIcon = (color) => new L.Icon({
 
 const userIcon = createIcon('blue');
 const groupIcon = createIcon('green');
-const nearbyUserIcon = createIcon('gold');
-
-// Helper component to handle map movements
-function MapViewHandler({ center }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center) {
-      map.flyTo(center, 13, { animate: true });
-    }
-  }, [center, map]);
-  return null;
-}
 
 export default function FitnessMap({ groups }) {
-  const [position, setPosition] = useState([40.7128, -74.0060]); // Default to NY
-  const [nearbyProfiles, setNearbyProfiles] = useState([]);
-  const [nearbyGroups, setNearbyGroups] = useState([]);
+  const [position, setPosition] = useState([40.7128, -74.0060]);
   const [locationError, setLocationError] = useState('');
+  const [nearbyGroups, setNearbyGroups] = useState([]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -44,23 +31,18 @@ export default function FitnessMap({ groups }) {
           const lng = pos.coords.longitude;
           setPosition([lat, lng]);
           
-          // Generate realistic mock clusters based strictly around the user's HTML5 coordinates
           const randomOffsets = Array.from({ length: 4 }).map(() => [
             lat + (Math.random() - 0.5) * 0.05,
             lng + (Math.random() - 0.5) * 0.05
           ]);
-          setNearbyProfiles([
-            { id: 1, name: "Ali R.", activity: "Marathon Runner", pos: randomOffsets[0] },
-            { id: 2, name: "Samantha W.", activity: "Crossfit", pos: randomOffsets[1] }
-          ]);
           setNearbyGroups([
-            { id: 1, name: groups?.[0]?.name || "Downtown Morning Walkers", pos: randomOffsets[2], type: "Walk" },
-            { id: 2, name: groups?.[1]?.name || "Sunset Yoga Flex", pos: randomOffsets[3], type: "Yoga" }
+            { id: 1, name: groups?.[0]?.name || "Downtown Morning Walkers", pos: randomOffsets[0] },
+            { id: 2, name: groups?.[1]?.name || "Sunset Yoga Flex", pos: randomOffsets[1] }
           ]);
         },
         (err) => {
           console.error(err);
-          setLocationError('Please allow location tracking in your browser to see nearby maps seamlessly!');
+          setLocationError('Please allow location tracking to see nearby maps.');
         }
       );
     }
@@ -74,37 +56,21 @@ export default function FitnessMap({ groups }) {
         </div>
       )}
       <MapContainer 
+        key={JSON.stringify(position)}
         center={position} 
         zoom={13} 
         style={{ width: '100%', height: '100%' }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MapViewHandler center={position} />
-        
         <Marker position={position} icon={userIcon}>
-          <Popup><b>You are here!</b><br />Ready for a workout!</Popup>
+          <Popup><b>You are here!</b></Popup>
         </Marker>
-
-        {(nearbyGroups || []).map(grp => grp && grp.pos && (
+        {nearbyGroups.map(grp => (
           <Marker key={`grp-${grp.id}`} position={grp.pos} icon={groupIcon}>
-            <Popup>
-              <b>{grp.name || 'Fitness Group'}</b><br />
-              <span style={{color: 'green'}}>• Fitness Group</span><br/>
-              Activity: {grp.type || 'Workout'}
-            </Popup>
-          </Marker>
-        ))}
-
-        {(nearbyProfiles || []).map(usr => usr && usr.pos && (
-          <Marker key={`usr-${usr.id}`} position={usr.pos} icon={nearbyUserIcon}>
-            <Popup>
-              <b>{usr.name || 'User'}</b><br />
-              <span style={{color: 'goldenrod'}}>• Local User</span><br/>
-              Specialty: {usr.activity || 'Fitness'}
-            </Popup>
+            <Popup><b>{grp.name}</b></Popup>
           </Marker>
         ))}
       </MapContainer>

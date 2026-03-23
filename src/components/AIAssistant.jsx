@@ -32,7 +32,7 @@ export default function AIAssistant() {
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const prompt = `You are an elite, highly motivational fitness coach for the PaceBoard app. Answer this strictly in 2 to 3 concise sentences. Query: ${userMessage.text}`;
       
       const result = await model.generateContent(prompt);
