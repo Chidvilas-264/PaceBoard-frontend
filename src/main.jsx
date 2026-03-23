@@ -2,11 +2,11 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter as Router } from 'react-router-dom'
 import axios from 'axios'
-import App from './App.jsx'
+import App from '../App.jsx'
 import './index.css'
 
-// Point all Axios requests to Render Backend if in Production
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
+// Hardcoding backend Render URL so it never fails on Vercel deployment
+axios.defaults.baseURL = 'https://paceboard-backend.onrender.com';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
