@@ -15,10 +15,11 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
-  const [theme, setTheme] = useState(user?.theme || 'light');
+  const [theme, setTheme] = useState(localStorage.getItem('paceboardTheme') || user?.theme || 'light');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('paceboardTheme', theme);
   }, [theme]);
 
   const handleLogout = () => {
