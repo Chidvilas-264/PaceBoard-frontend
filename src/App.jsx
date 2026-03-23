@@ -9,6 +9,7 @@ import FindGroup from './pages/FindGroup';
 import Challenges from './pages/Challenges';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
+import AIAssistant from './components/AIAssistant';
 
 function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('paceboardUser')) || null);
@@ -84,6 +85,9 @@ function App() {
           <p>© 2026 PaceBoard Fitness. All rights reserved.</p>
           <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>Contact Administrator: chidvilassai26@gmail.com | +91-8886422516</p>
         </footer>
+        
+        {/* Floating Global AI Assistant */}
+        <AIAssistant />
       </div>
   );
 }

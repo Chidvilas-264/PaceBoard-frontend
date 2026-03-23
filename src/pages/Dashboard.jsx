@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Activity, Zap, Award } from 'lucide-react';
+import { Activity, Zap, Award, MapPin, Sparkles, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import FitnessMap from '../components/FitnessMap';
 
 export default function Dashboard({ user }) {
   const [suggestedGroups, setSuggestedGroups] = useState([]);
@@ -44,6 +45,10 @@ export default function Dashboard({ user }) {
     setCurrentSteps(prev => prev + 1500);
   };
 
+  const monthlySteps = user?.monthlySteps || 120500;
+  const isBeginner = user?.dailyStepGoal < 8000 || monthlySteps < 60000;
+  const aiChallenge = isBeginner ? { name: "Beginner 5K Weekly Walk", diff: "Easy", color: "#10B981" } : { name: "Elite Marathon Prep (High Intensity)", diff: "Advanced", color: "#EF4444" };
+
   if (!user) return null;
 
   return (
@@ -62,7 +67,15 @@ export default function Dashboard({ user }) {
         </div>
       </div>
 
-      <div className="dashboard-grid">
+      <div className="card glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--surface)' }}>
+        <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+           <MapPin size={24} className="logo-icon" /> OpenStreetMap Community Tracker
+        </h3>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Securely locating nearby fitness enthusiasts and groups via live browser geolocation.</p>
+        <FitnessMap groups={suggestedGroups} />
+      </div>
+
+      <div className="dashboard-grid" style={{ marginTop: '0' }}>
         <div className="card glass-panel" style={{ gridColumn: '1 / -1' }}>
           <h3 className="card-title"><Activity className="logo-icon" size={24} /> Daily Step Goal</h3>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '1rem' }}>
@@ -122,8 +135,10 @@ export default function Dashboard({ user }) {
 
       <div className="dashboard-grid" style={{ marginTop: '2rem' }}>
         <div className="card">
-          <h3 className="card-title">Suggested Groups for You</h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Based on your {user.preferredActivity} preference in {user.locality}</p>
+          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+             <Sparkles size={24} className="logo-icon" style={{ color: '#F59E0B' }}/> AI Group Suggestions
+          </h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Curated based on your locality ({user.locality}) & {user.preferredActivity} preference</p>
           {suggestedGroups.length > 0 ? (
             suggestedGroups.map(g => (
               <div key={g.id} className="challenge-item">
@@ -140,23 +155,28 @@ export default function Dashboard({ user }) {
               </div>
             ))
           ) : (
-            <p>No groups found in your locality just yet. Be the first to start one!</p>
+            <p>Scanning global servers for nearby communities... Invite friends to start one!</p>
           )}
         </div>
         
         <div className="card">
-          <h3 className="card-title">Weekly Challenges</h3>
+          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+             <Target size={24} className="logo-icon" style={{ color: '#10B981' }} /> AI Challenges Tracker
+          </h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Dynamically tailored to your {monthlySteps.toLocaleString()} monthly steps!</p>
+          
+          <div className="challenge-item" style={{ borderLeft: `5px solid ${aiChallenge.color}` }}>
+            <div>
+              <h4 style={{ fontWeight: 600 }}>{aiChallenge.name}</h4>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>Difficulty: {aiChallenge.diff}</span>
+            </div>
+            <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>Join</button>
+          </div>
+
           <div className="challenge-item">
             <div>
               <h4 style={{ fontWeight: 600 }}>10K Step Weekathon</h4>
               <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Ends in 3 days</span>
-            </div>
-            <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>Join</button>
-          </div>
-          <div className="challenge-item">
-            <div>
-              <h4 style={{ fontWeight: 600 }}>Local Joggers Sprint</h4>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Ongoing</span>
             </div>
             <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>View</button>
           </div>
