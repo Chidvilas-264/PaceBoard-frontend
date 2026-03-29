@@ -10,10 +10,18 @@ export default function Challenges({ user }) {
   const [aiGeneratedChallenge, setAiGeneratedChallenge] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [memberChallengeForm, setMemberChallengeForm] = useState({ details: '', duration: '', complete: false });
-  const [activeChallenges, setActiveChallenges] = useState([
-    { id: 1, title: '10K Step Weekathon', status: 'ACTIVE', info: 'Ends in 3 days', progress: { cur: 42000, max: 70000, pct: 60 }, color: '#10B981' },
-    { id: 2, title: 'Weekend Warrior 50K', status: 'COMPLETED', info: 'Finished on Mar 20, 2026', successText: '🏆 Success (+500 pts)', color: '#8B5CF6' }
-  ]);
+  const [activeChallenges, setActiveChallenges] = useState(() => {
+    const saved = localStorage.getItem(`paceboard_active_challenges_${user?.id}`);
+    if (saved) return JSON.parse(saved);
+    return [
+      { id: 1, title: '10K Step Weekathon', status: 'ACTIVE', info: 'Ends in 3 days', progress: { cur: 42000, max: 70000, pct: 60 }, color: '#10B981' },
+      { id: 2, title: 'Weekend Warrior 50K', status: 'COMPLETED', info: 'Finished on Mar 20, 2026', successText: '🏆 Success (+500 pts)', color: '#8B5CF6' }
+    ];
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem(`paceboard_active_challenges_${user?.id}`, JSON.stringify(activeChallenges));
+  }, [activeChallenges, user.id]);
 
   if (!user) return <div>Please login first</div>;
 

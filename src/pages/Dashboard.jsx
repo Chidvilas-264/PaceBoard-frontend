@@ -24,6 +24,7 @@ export default function Dashboard({ user }) {
   const [chatHistory, setChatHistory] = useState([]);
   const stompClient = useRef(null);
   const navigate = useNavigate();
+  const [userChallenges, setUserChallenges] = useState([]);
 
   const activityData = [
     { name: 'Mon', steps: 6000, calories: 1800 },
@@ -34,6 +35,13 @@ export default function Dashboard({ user }) {
     { name: 'Sat', steps: 15000, calories: 3100 },
     { name: 'Sun', steps: 7432, calories: 1900 },
   ];
+
+  useEffect(() => {
+    const saved = localStorage.getItem(`paceboard_active_challenges_${user?.id}`);
+    if (saved) {
+      setUserChallenges(JSON.parse(saved));
+    }
+  }, [user]);
 
   const challengesList = [
     {
@@ -56,7 +64,18 @@ export default function Dashboard({ user }) {
       taken: 8430,
       completed: 5102,
       color: '#10B981'
-    }
+    },
+    ...userChallenges.map(c => ({
+      id: c.id,
+      title: c.title,
+      difficulty: "Custom",
+      status: "active",
+      endDate: c.info,
+      description: c.info,
+      taken: 1,
+      completed: 0,
+      color: c.color || '#3B82F6'
+    }))
   ];
 
   const formatDate = (dateStr) => {
@@ -313,14 +332,15 @@ export default function Dashboard({ user }) {
           )}
         </div>
 
-        <div className="card glass-panel">
+        <div className="card glass-panel" style={{ gridColumn: '1 / -1' }}>
           <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
              <Target size={24} className="logo-icon" style={{ color: '#10B981' }} /> AI Challenges Tracker
           </h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Dynamically tailored to your 120,500 monthly steps!</p>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Dynamically tailored to your {monthlySteps.toLocaleString()} monthly steps!</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             {challengesList.map(challenge => (
-              <div key={challenge.id} style={{ background: 'var(--surface)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)', borderLeft: `4px solid ${challenge.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.2s', cursor: 'pointer' }} onClick={() => setSelectedChallenge(challenge)}>
+              <div key={challenge.id} style={{ flex: '1 1 300px', background: 'var(--surface)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)', borderLeft: `5px solid ${challenge.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.2s', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} onClick={() => setSelectedChallenge(challenge)}>
                 <div>
                   <h4 style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>{challenge.title}</h4>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: challenge.status === 'available' ? 'bold' : 'normal' }}>
@@ -336,6 +356,7 @@ export default function Dashboard({ user }) {
                 </button>
               </div>
             ))}
+            </div>
           </div>
         </div>
 
