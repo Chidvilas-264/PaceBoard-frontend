@@ -10,6 +10,10 @@ export default function Challenges({ user }) {
   const [aiGeneratedChallenge, setAiGeneratedChallenge] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [memberChallengeForm, setMemberChallengeForm] = useState({ details: '', duration: '', complete: false });
+  const [activeChallenges, setActiveChallenges] = useState([
+    { id: 1, title: '10K Step Weekathon', status: 'ACTIVE', info: 'Ends in 3 days', progress: { cur: 42000, max: 70000, pct: 60 }, color: '#10B981' },
+    { id: 2, title: 'Weekend Warrior 50K', status: 'COMPLETED', info: 'Finished on Mar 20, 2026', successText: '🏆 Success (+500 pts)', color: '#8B5CF6' }
+  ]);
 
   if (!user) return <div>Please login first</div>;
 
@@ -31,31 +35,32 @@ export default function Challenges({ user }) {
               <Trophy className="logo-icon" /> My Active & Completed Challenges
             </h2>
             <div className="dashboard-grid">
-              <div className="card" style={{ background: 'var(--surface)', borderLeft: '4px solid #10B981' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3 className="card-title" style={{ margin: 0 }}>10K Step Weekathon</h3>
-                  <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: 'white', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 'bold' }}>ACTIVE</span>
+              {activeChallenges.map(challenge => (
+                <div key={challenge.id} className="card" style={{ background: 'var(--surface)', borderLeft: `4px solid ${challenge.color}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 className="card-title" style={{ margin: 0 }}>{challenge.title}</h3>
+                    <span style={{ fontSize: '0.75rem', background: challenge.status === 'ACTIVE' ? 'var(--primary)' : '#374151', color: challenge.status === 'ACTIVE' ? 'white' : '#D1D5DB', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 'bold' }}>{challenge.status}</span>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>{challenge.info}</p>
+                  
+                  {challenge.status === 'ACTIVE' && challenge.progress && (
+                    <>
+                      <div className="progress-bar" style={{ marginBottom: '0.75rem', height: '8px' }}>
+                        <div className="progress-fill" style={{ width: `${challenge.progress.pct}%`, background: challenge.color }}></div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>{challenge.progress.cur.toLocaleString()} / {challenge.progress.max.toLocaleString()} steps</span>
+                        <span style={{ color: challenge.color, fontWeight: 'bold' }}>{challenge.progress.pct}%</span>
+                      </div>
+                    </>
+                  )}
+                  {challenge.status === 'COMPLETED' && challenge.successText && (
+                    <div style={{ display: 'inline-block', background: `${challenge.color}20`, color: challenge.color, padding: '0.4rem 1rem', borderRadius: '2rem', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                      {challenge.successText}
+                    </div>
+                  )}
                 </div>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>Ends in 3 days</p>
-                <div className="progress-bar" style={{ marginBottom: '0.75rem', height: '8px' }}>
-                  <div className="progress-fill" style={{ width: '60%', background: '#10B981' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>42,000 / 70,000 steps</span>
-                  <span style={{ color: '#10B981', fontWeight: 'bold' }}>60%</span>
-                </div>
-              </div>
-
-              <div className="card" style={{ background: 'var(--surface)', borderLeft: '4px solid #8B5CF6' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3 className="card-title" style={{ margin: 0 }}>Weekend Warrior 50K</h3>
-                  <span style={{ fontSize: '0.75rem', background: '#374151', color: '#D1D5DB', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 'bold' }}>COMPLETED</span>
-                </div>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>Finished on Mar 20, 2026</p>
-                <div style={{ display: 'inline-block', background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6', padding: '0.4rem 1rem', borderRadius: '2rem', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                  🏆 Success (+500 pts)
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
@@ -65,7 +70,14 @@ export default function Challenges({ user }) {
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Zap className="logo-icon" /> Host a New Challenge
             </h2>
-            <form>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              setActiveChallenges(prev => [{
+                id: Date.now(), title: e.target[0].value, status: 'ACTIVE', info: `Duration: ${e.target[2].value} days`, progress: { cur: Math.floor(Math.random() * 5000), max: parseInt(e.target[1].value), pct: 0 }, color: '#EF4444'
+              }, ...prev]);
+              alert('Challenge created!');
+              setActiveTab('myChallenges');
+            }}>
               <div className="form-group">
                 <label>Challenge Name</label>
                 <input type="text" className="input-field" placeholder="E.g., 50K Steps Weekend" required />
@@ -163,7 +175,15 @@ export default function Challenges({ user }) {
                           </label>
                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                             <button className="btn-outline" onClick={() => setMemberAction(null)} style={{ flex: 1, padding: '0.5rem' }}>Cancel</button>
-                            <button className="btn-primary" onClick={() => { alert('Challenge sent!'); setMemberAction(null); setSelectedMember(null); }} style={{ flex: 1, padding: '0.5rem' }}>Send</button>
+                            <button className="btn-primary" onClick={() => {
+                              setActiveChallenges(prev => [{
+                                id: Date.now(), title: `Challenge vs ${member.name}`, status: 'ACTIVE', info: memberChallengeForm.details || 'Custom Challenge', progress: { cur: 0, max: 100, pct: 0 }, color: '#3B82F6'
+                              }, ...prev]);
+                              alert('Challenge sent!'); 
+                              setMemberAction(null); 
+                              setSelectedMember(null); 
+                              setActiveTab('myChallenges');
+                            }} style={{ flex: 1, padding: '0.5rem' }}>Send</button>
                           </div>
                         </div>
                       )}
@@ -179,7 +199,17 @@ export default function Challenges({ user }) {
                               <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '1rem', fontStyle: 'italic' }}>"{aiGeneratedChallenge}"</p>
                               <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <button className="btn-outline" onClick={() => { setMemberAction(null); setAiGeneratedChallenge(null); }} style={{ flex: 1, padding: '0.5rem' }}>Cancel</button>
-                                <button className="btn-primary" onClick={() => { alert('AI Challenge sent to ' + member.name + '!'); setMemberAction(null); setSelectedMember(null); }} style={{ flex: 1, padding: '0.5rem' }}>Send AI Challenge</button>
+                                <button className="btn-primary" onClick={() => {
+                                  let shortInfo = aiGeneratedChallenge;
+                                  if (shortInfo && shortInfo.length > 60) shortInfo = shortInfo.substring(0, 60) + '...';
+                                  setActiveChallenges(prev => [{
+                                    id: Date.now(), title: `AI Challenge vs ${member.name}`, status: 'ACTIVE', info: shortInfo || 'AI Generated', progress: { cur: 0, max: 100, pct: 0 }, color: '#F59E0B'
+                                  }, ...prev]);
+                                  alert('AI Challenge sent to ' + member.name + '!');
+                                  setMemberAction(null);
+                                  setSelectedMember(null);
+                                  setActiveTab('myChallenges');
+                                }} style={{ flex: 1, padding: '0.5rem' }}>Send AI Challenge</button>
                               </div>
                             </div>
                           )}
