@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import FitnessMap from '../components/FitnessMap';
 
-import FitnessMap from '../components/FitnessMap';
-
 export default function Dashboard({ user }) {
   const [suggestedGroups, setSuggestedGroups] = useState([]);
   const [myGroups, setMyGroups] = useState([]);
