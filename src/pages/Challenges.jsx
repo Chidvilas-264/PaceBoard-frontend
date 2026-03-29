@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { Target, Trophy, Clock, Zap } from 'lucide-react';
+import axios from 'axios';
+import { Target, Trophy, Clock, Zap, MessageSquare, CheckCircle, Bot } from 'lucide-react';
 
 export default function Challenges({ user }) {
   const [activeTab, setActiveTab] = useState('myChallenges');
+  const [invitedGroups, setInvitedGroups] = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [memberAction, setMemberAction] = useState(null); // 'create' or 'generate'
+  const [aiGeneratedChallenge, setAiGeneratedChallenge] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [memberChallengeForm, setMemberChallengeForm] = useState({ details: '', duration: '', complete: false });
 
   if (!user) return <div>Please login first</div>;
 
@@ -82,16 +88,30 @@ export default function Challenges({ user }) {
               <Trophy className="logo-icon" /> Challenge Other Groups
             </h2>
             <div className="dashboard-grid">
-              <div className="card" style={{ background: 'var(--background)' }}>
-                <h3 className="card-title">Downtown Runners</h3>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Ranked #1 in Locality</p>
-                <button className="btn-secondary" style={{ width: '100%' }}>Send Invite</button>
-              </div>
-              <div className="card" style={{ background: 'var(--background)' }}>
-                <h3 className="card-title">Yoga for Life</h3>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Ranked #2 in Locality</p>
-                <button className="btn-secondary" style={{ width: '100%' }}>Send Invite</button>
-              </div>
+              {['Downtown Runners', 'Yoga for Life'].map((groupName, idx) => (
+                <div key={groupName} className="card" style={{ background: 'var(--background)' }}>
+                  <h3 className="card-title">{groupName}</h3>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Ranked #{idx + 1} in Locality</p>
+                  
+                  {!invitedGroups.includes(groupName) ? (
+                    <button className="btn-secondary" style={{ width: '100%' }} onClick={() => {
+                      alert('Sent invite!');
+                      setInvitedGroups(prev => [...prev, groupName]);
+                    }}>
+                      Send Invite
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ color: '#10B981', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem' }}>
+                        <CheckCircle size={18} /> Invite Sent!
+                      </div>
+                      <button className="btn-primary" style={{ width: '100%', fontSize: '0.85rem' }} onClick={() => setActiveTab('create')}>
+                        Create Custom Challenge
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -102,20 +122,72 @@ export default function Challenges({ user }) {
               <Target className="logo-icon" /> Challenge Your Group Members
             </h2>
             <div className="dashboard-grid">
-              <div className="challenge-item" style={{ border: '1px solid var(--border)' }}>
-                <div>
-                  <h4 style={{ fontWeight: 600 }}>Alex Johnson</h4>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Top Scorer</span>
+              {[{name: 'Alex Johnson', stat: 'Top Scorer'}, {name: 'Sarah Smith', stat: 'Streak: 12 Days'}].map((member) => (
+                <div key={member.name} className="challenge-item" style={{ border: '1px solid var(--border)', flexDirection: 'column', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div>
+                      <h4 style={{ fontWeight: 600 }}>{member.name}</h4>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{member.stat}</span>
+                    </div>
+                    {selectedMember !== member.name && (
+                      <button className="btn-outline" onClick={() => setSelectedMember(member.name)} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>Challenge</button>
+                    )}
+                  </div>
+                  
+                  {selectedMember === member.name && (
+                    <div className="animate-fade-in" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                      {!memberAction && (
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button className="btn-primary" onClick={() => setMemberAction('create')} style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}>Create Challenge</button>
+                          <button className="btn-secondary" onClick={async () => {
+                            setMemberAction('generate');
+                            setIsGenerating(true);
+                            try {
+                              const res = await axios.post("https://paceboard-backend.onrender.com/api/ai/chat", { message: `Generate a fun, short, customized fitness challenge for my friend ${member.name} who focuses on ${member.stat}. Do not format with markdown, just plain text.` });
+                              setAiGeneratedChallenge(res.data.response);
+                            } catch (e) {
+                              setAiGeneratedChallenge("Do 50 Pushups by the end of tomorrow! " + e.message);
+                            }
+                            setIsGenerating(false);
+                          }} style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem', background: '#8B5CF6' }}>Generate AI Challenge</button>
+                        </div>
+                      )}
+
+                      {memberAction === 'create' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <input type="text" className="input-field" placeholder="Challenge Details (e.g., Run 5km)" value={memberChallengeForm.details} onChange={e => setMemberChallengeForm({...memberChallengeForm, details: e.target.value})} />
+                          <input type="text" className="input-field" placeholder="Duration (e.g., 2 days)" value={memberChallengeForm.duration} onChange={e => setMemberChallengeForm({...memberChallengeForm, duration: e.target.value})} />
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                            <input type="checkbox" checked={memberChallengeForm.complete} onChange={e => setMemberChallengeForm({...memberChallengeForm, complete: e.target.checked})} /> Require proof of completion
+                          </label>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            <button className="btn-outline" onClick={() => setMemberAction(null)} style={{ flex: 1, padding: '0.5rem' }}>Cancel</button>
+                            <button className="btn-primary" onClick={() => { alert('Challenge sent!'); setMemberAction(null); setSelectedMember(null); }} style={{ flex: 1, padding: '0.5rem' }}>Send</button>
+                          </div>
+                        </div>
+                      )}
+
+                      {memberAction === 'generate' && (
+                        <div style={{ marginTop: '0.5rem', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
+                          {isGenerating ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+                              <Bot className="animate-spin" size={18} /> AI is crafting the perfect challenge...
+                            </div>
+                          ) : (
+                            <div>
+                              <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '1rem', fontStyle: 'italic' }}>"{aiGeneratedChallenge}"</p>
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button className="btn-outline" onClick={() => { setMemberAction(null); setAiGeneratedChallenge(null); }} style={{ flex: 1, padding: '0.5rem' }}>Cancel</button>
+                                <button className="btn-primary" onClick={() => { alert('AI Challenge sent to ' + member.name + '!'); setMemberAction(null); setSelectedMember(null); }} style={{ flex: 1, padding: '0.5rem' }}>Send AI Challenge</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <button className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>Challenge</button>
-              </div>
-              <div className="challenge-item" style={{ border: '1px solid var(--border)' }}>
-                <div>
-                  <h4 style={{ fontWeight: 600 }}>Sarah Smith</h4>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Streak: 12 Days</span>
-                </div>
-                <button className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>Challenge</button>
-              </div>
+              ))}
             </div>
           </div>
         )}

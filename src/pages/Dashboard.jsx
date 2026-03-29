@@ -16,6 +16,11 @@ export default function Dashboard({ user }) {
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [selectedGroupDetails, setSelectedGroupDetails] = useState(null);
   const [groupMembers, setGroupMembers] = useState([]);
+  const [activeChatGroup, setActiveChatGroup] = useState(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+    { text: "Welcome to the group chat!", sender: 'system' }
+  ]);
   const navigate = useNavigate();
 
   const challengesList = [
@@ -266,6 +271,9 @@ export default function Dashboard({ user }) {
                   <button className="btn-outline" onClick={() => handleViewGroup(g)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
                     View Details
                   </button>
+                  <button className="btn-primary" onClick={() => { setActiveChatGroup(g); setChatHistory([{ text: `Welcome to the ${g.name} chat!`, sender: 'system' }]); }} style={{ flex: 1 }}>
+                    Group Chat
+                  </button>
                   <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
                     Exit Group
                   </button>
@@ -423,6 +431,40 @@ export default function Dashboard({ user }) {
             <button className="btn-outline" onClick={() => setSelectedGroupDetails(null)} style={{ width: '100%', padding: '0.75rem', marginTop: '1rem', fontWeight: 'bold' }}>
               Close
             </button>
+          </div>
+        </div>
+      , document.body)}      {activeChatGroup && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 999999, padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '400px', height: '500px', padding: 0, borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '1rem', background: 'var(--surface)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--text-main)' }}>{activeChatGroup.name} Chat</div>
+              <button className="btn-outline" style={{ padding: '0.2rem 0.6rem', borderColor: 'var(--border)', color: 'var(--text-main)' }} onClick={() => setActiveChatGroup(null)}>Close</button>
+            </div>
+            <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {chatHistory.map((msg, idx) => (
+                <div key={idx} style={{ textAlign: msg.sender === 'user' ? 'right' : 'center', width: '100%' }}>
+                  <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '12px', background: msg.sender === 'user' ? 'var(--primary)' : 'var(--surface)', color: msg.sender === 'user' ? 'white' : 'var(--text-muted)', fontSize: msg.sender === 'system' ? '0.8rem' : '1rem', maxWidth: '80%', wordBreak: 'break-word' }}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '0.8rem', background: 'var(--surface)', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem' }}>
+              <input type="text" className="input-field" placeholder="Type a message..." value={chatMessage} onChange={e => setChatMessage(e.target.value)} onKeyDown={(e) => {
+                if (e.key === 'Enter' && chatMessage.trim()) {
+                  setChatHistory([...chatHistory, { text: chatMessage, sender: 'user' }]);
+                  setChatMessage('');
+                  setTimeout(() => setChatHistory(prev => [...prev, { text: '👍', sender: 'system' }]), 1500);
+                }
+              }} style={{ flex: 1, margin: 0 }} />
+              <button className="btn-primary" onClick={() => {
+                if (chatMessage.trim()) {
+                  setChatHistory([...chatHistory, { text: chatMessage, sender: 'user' }]);
+                  setChatMessage('');
+                  setTimeout(() => setChatHistory(prev => [...prev, { text: '👍', sender: 'system' }]), 1500);
+                }
+              }}>Send</button>
+            </div>
           </div>
         </div>
       , document.body)}
