@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CheckSquare, Trash2, Plus, Clock, Target } from 'lucide-react';
+import { CheckSquare, Trash2, Plus, Clock, Target, Sparkles } from 'lucide-react';
 
 export default function Checklist({ user }) {
   const [tasks, setTasks] = useState([]);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskTime, setNewTaskTime] = useState('');
   const [taskAmpm, setTaskAmpm] = useState('AM');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -20,6 +21,32 @@ export default function Checklist({ user }) {
       setTasks(res.data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const generateRoutine = async () => {
+    setIsGenerating(true);
+    const prompt = `As an elite AI fitness coach, generate a customized daily routine checklist for a user. User stats: Age: ${user.age || 25}, Gender: ${user.gender || 'unspecified'}, Weight: ${user.weight || 70}kg, Height: ${user.height || 170}cm. Please output ONLY a valid JSON array of objects in this EXACT format: [{"taskName": "Drink water", "time": "08:00 AM"}, {"taskName": "Morning run", "time": "08:30 AM"}]. Do not include any greeting, explanation, or markdown formatting like \`\`\`json. Just the raw array. Generate exactly 5 highly-effective fitness/health tasks spread throughout the day.`;
+    try {
+      const res = await axios.post(`https://paceboard-backend.onrender.com/api/ai/chat`, { message: prompt });
+      let output = res.data;
+      if(output.startsWith('\`\`\`')) {
+         output = output.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      }
+      const routines = JSON.parse(output);
+      for (const item of routines) {
+        await axios.post(`https://paceboard-backend.onrender.com/api/users/${user.id}/checklist`, {
+          taskName: item.taskName || item.task,
+          time: item.time,
+          completed: false
+        });
+      }
+      await fetchTasks();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate routine or parse AI output.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -94,10 +121,22 @@ export default function Checklist({ user }) {
             <option value="PM">PM</option>
           </select>
         </div>
-        <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '100%' }}>
+        <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '100%', padding: '0.75rem 1.5rem' }}>
           <Plus size={20} /> Add Target
         </button>
       </form>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2rem' }}>
+        <button 
+          onClick={generateRoutine} 
+          disabled={isGenerating}
+          className="btn-primary" 
+          style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', display: 'flex', alignItems: 'center', gap: '0.5rem', border: 'none' }}
+        >
+          <Sparkles size={20} />
+          {isGenerating ? 'AI is Generating...' : 'Auto-Generate AI Routine'}
+        </button>
+      </div>
 
       <div className="dashboard-grid">
         <div className="card" style={{ gridColumn: '1 / -1' }}>
