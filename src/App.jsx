@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Activity, User as UserIcon, LogOut, Settings as SettingsIcon, Users, Target, Moon, Sun, LayoutDashboard, Trophy } from 'lucide-react';
+import { Activity, User as UserIcon, LogOut, Settings as SettingsIcon, Users, Target, Moon, Sun, LayoutDashboard, Trophy, CheckSquare } from 'lucide-react';
 import Home from './pages/Home';
 import Auth from './pages/Auth';
 import Questionnaire from './pages/Questionnaire';
@@ -9,6 +9,7 @@ import FindGroup from './pages/FindGroup';
 import Challenges from './pages/Challenges';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
+import Checklist from './pages/Checklist';
 
 
 function App() {
@@ -54,6 +55,9 @@ function App() {
                 <Link to="/challenges" className="nav-link" title="Challenges">
                   {path === '/challenges' ? <span style={{fontWeight: 700, color: 'var(--primary)'}}>Challenges</span> : <Target size={20} />}
                 </Link>
+                <Link to="/checklist" className="nav-link" title="Planner">
+                  {path === '/checklist' ? <span style={{fontWeight: 700, color: 'var(--primary)'}}>Planner</span> : <CheckSquare size={20} />}
+                </Link>
                 <Link to="/settings" className="nav-link" title="Settings">
                   {path === '/settings' ? <span style={{fontWeight: 700, color: 'var(--primary)'}}>Settings</span> : <SettingsIcon size={20} />}
                 </Link>
@@ -76,6 +80,7 @@ function App() {
             <Route path="/groups" element={<FindGroup user={user} />} />
             <Route path="/leaderboard" element={<Leaderboard user={user} />} />
             <Route path="/challenges" element={<Challenges user={user} />} />
+            <Route path="/checklist" element={<Checklist user={user} />} />
             <Route path="/settings" element={<Settings user={user} setUser={setUser} setTheme={setTheme} handleLogout={handleLogout} />} />
           </Routes>
         </main>

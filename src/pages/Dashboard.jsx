@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Activity, Zap, Award, MapPin, Sparkles, Target } from 'lucide-react';
+import { Activity, Zap, Award, MapPin, Sparkles, Target, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import FitnessMap from '../components/FitnessMap';
 
+import FitnessMap from '../components/FitnessMap';
+
 export default function Dashboard({ user }) {
   const [suggestedGroups, setSuggestedGroups] = useState([]);
+  const [myGroups, setMyGroups] = useState([]);
   const [currentSteps, setCurrentSteps] = useState(7432);
   const [hasCelebrated, setHasCelebrated] = useState(false);
   const navigate = useNavigate();
@@ -20,6 +23,8 @@ export default function Dashboard({ user }) {
       try {
         const localityRes = await axios.get(`https://paceboard-backend.onrender.com/api/groups?locality=${user.locality}`);
         setSuggestedGroups(localityRes.data);
+        const myGrpRes = await axios.get(`https://paceboard-backend.onrender.com/api/users/${user.id}/groups`);
+        setMyGroups(myGrpRes.data);
       } catch (err) {
         console.error(err);
       }
@@ -151,11 +156,33 @@ export default function Dashboard({ user }) {
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{g.totalMembers} Members</span>
                   </div>
                 </div>
-                <button className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>Join</button>
+                <button className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => navigate('/groups')}>View</button>
               </div>
             ))
           ) : (
             <p>Scanning global servers for nearby communities... Invite friends to start one!</p>
+          )}
+
+          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '2rem' }}>
+             <Users size={24} className="logo-icon" style={{ color: 'var(--primary)' }}/> My Groups
+          </h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Groups you have recently joined</p>
+          {myGroups.length > 0 ? (
+            myGroups.map(g => (
+              <div key={g.id} className="challenge-item" style={{ background: 'var(--background)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ background: 'var(--secondary)', color: 'white', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {(g.name || 'G').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 style={{ fontWeight: 600 }}>{g.name || 'Fitness Group'}</h4>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Member Since: {g.activeSince || 'recently'}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={{ color: 'var(--text-muted)' }}>You haven't joined any groups yet. Explore and join to see them here.</p>
           )}
         </div>
         
