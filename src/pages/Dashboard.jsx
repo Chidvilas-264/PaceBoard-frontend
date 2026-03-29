@@ -12,6 +12,7 @@ export default function Dashboard({ user }) {
   const [currentSteps, setCurrentSteps] = useState(7432);
   const [hasCelebrated, setHasCelebrated] = useState(false);
   const [confirmExitDialog, setConfirmExitDialog] = useState(null);
+  const [confirmDeleteGroupDialog, setConfirmDeleteGroupDialog] = useState(null);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const navigate = useNavigate();
 
@@ -54,6 +55,18 @@ export default function Dashboard({ user }) {
       console.error("Failed to leave group:", err);
     }
     setConfirmExitDialog(null);
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    try {
+      await axios.delete(`https://paceboard-backend.onrender.com/api/groups/${groupId}/${user.id}`);
+      setMyGroups(myGroups.filter(g => g.id !== groupId));
+      setSuggestedGroups(suggestedGroups.filter(g => g.id !== groupId));
+    } catch (err) {
+      console.error("Failed to permanently delete group:", err);
+      alert("Failed to delete group. Ensure you are the creator.");
+    }
+    setConfirmDeleteGroupDialog(null);
   };
 
   useEffect(() => {
@@ -217,7 +230,10 @@ export default function Dashboard({ user }) {
                     {(g.name || 'G').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 style={{ fontWeight: 600 }}>{g.name || 'Fitness Group'}</h4>
+                    <h4 style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {g.name || 'Fitness Group'}
+                      {g.creatorId === user.id && <span style={{ fontSize: '0.7rem', background: '#3b82f6', padding: '0.1rem 0.4rem', borderRadius: '4px', color: 'white' }}>ADMIN</span>}
+                    </h4>
                     {g.activeSince && (
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                         Active since: {formatDate(g.activeSince)}
@@ -225,9 +241,16 @@ export default function Dashboard({ user }) {
                     )}
                   </div>
                 </div>
-                <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ width: '100%', marginTop: '1rem', color: '#EF4444', borderColor: '#EF4444' }}>
-                  Exit Group
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '1rem' }}>
+                  <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
+                    Exit Group
+                  </button>
+                  {g.creatorId === user.id && (
+                    <button className="btn-outline" onClick={() => setConfirmDeleteGroupDialog(g.id)} style={{ flex: 1, color: '#EF4444', borderColor: '#EF4444' }}>
+                      Delete Group
+                    </button>
+                  )}
+                </div>
               </div>
             ))
           ) : (
@@ -270,6 +293,19 @@ export default function Dashboard({ user }) {
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button className="btn-outline" onClick={() => setConfirmExitDialog(null)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold' }}>Cancel</button>
               <button className="btn-primary" onClick={() => handleExitGroup(confirmExitDialog)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold', background: '#EF4444', color: 'white' }}>Yes, Exit</button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
+      {confirmDeleteGroupDialog && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 999999, padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', textAlign: 'center', border: '1px solid #EF4444' }}>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#EF4444' }}>Permanently Delete Group?</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>This action is irreversible. The group will be permanently removed for everyone, and all members will lose access immediately.</p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-outline" onClick={() => setConfirmDeleteGroupDialog(null)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold' }}>Cancel</button>
+              <button className="btn-primary" onClick={() => handleDeleteGroup(confirmDeleteGroupDialog)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold', background: '#EF4444', color: 'white' }}>Delete Forever</button>
             </div>
           </div>
         </div>

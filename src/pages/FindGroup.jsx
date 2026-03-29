@@ -90,6 +90,19 @@ export default function FindGroup({ user }) {
     }
   };
 
+  const handleDeleteGroup = async (groupId) => {
+    if (!window.confirm("Permanently delete this group? This action is irreversible.")) return;
+    try {
+      await axios.delete(`https://paceboard-backend.onrender.com/api/groups/${groupId}/${user.id}`);
+      showToast('Group has been successfully deleted.', 'success');
+      fetchGroups();
+      fetchMyGroups();
+    } catch (err) {
+      console.error(err);
+      showToast('You must be the admin/creator to delete this group.', 'error');
+    }
+  };
+
   const handleViewDetails = async (g) => {
     setDetailsModal(g);
     setGroupMembers([]); // reset
@@ -175,7 +188,7 @@ export default function FindGroup({ user }) {
                 Active since: {formatDate(g.activeSince)}
               </div>
             )}
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
               {myGroupIds.has(g.id) ? (
                 <button className="btn-primary" style={{ flex: 1, opacity: 0.5, cursor: 'not-allowed', background: 'var(--surface)' }} disabled>
                   {g.creatorId === user.id ? 'Joined (Admin)' : 'Joined'}
@@ -184,6 +197,11 @@ export default function FindGroup({ user }) {
                 <button className="btn-primary" style={{ flex: 1 }} onClick={() => handleJoinGroup(g.id)}>Join Group</button>
               )}
               <button className="btn-outline" style={{ flex: 1 }} onClick={() => handleViewDetails(g)}>View Details</button>
+              {g.creatorId === user.id && (
+                <button className="btn-outline" onClick={() => handleDeleteGroup(g.id)} style={{ flex: '0.5', color: '#EF4444', borderColor: '#EF4444' }}>
+                  Delete
+                </button>
+              )}
             </div>
           </div>
         ))}
