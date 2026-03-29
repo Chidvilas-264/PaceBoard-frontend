@@ -279,8 +279,8 @@ export default function Dashboard({ user }) {
                     )}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '1rem' }}>
-                  <button className="btn-outline" onClick={() => handleViewGroup(g)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '1rem', flexWrap: 'wrap' }}>
+                  <button className="btn-outline" onClick={() => handleViewGroup(g)} style={{ flex: '1 1 calc(50% - 0.5rem)', color: 'var(--text-main)', borderColor: 'var(--border)' }}>
                     View Details
                   </button>
                   <button className="btn-primary" onClick={async () => { 
@@ -303,14 +303,14 @@ export default function Dashboard({ user }) {
                     });
                     client.activate();
                     stompClient.current = client;
-                  }} style={{ flex: 1 }}>
+                  }} style={{ flex: '1 1 calc(50% - 0.5rem)' }}>
                     Group Chat
                   </button>
-                  <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
+                  <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ flex: '1 1 calc(50% - 0.5rem)', color: 'var(--text-main)', borderColor: 'var(--border)' }}>
                     Exit Group
                   </button>
                   {g.creatorId === user.id && (
-                    <button className="btn-outline" onClick={() => setConfirmDeleteGroupDialog(g.id)} style={{ flex: 1, color: '#EF4444', borderColor: '#EF4444' }}>
+                    <button className="btn-outline" onClick={() => setConfirmDeleteGroupDialog(g.id)} style={{ flex: '1 1 calc(50% - 0.5rem)', color: '#EF4444', borderColor: '#EF4444' }}>
                       Delete
                     </button>
                   )}
@@ -322,29 +322,6 @@ export default function Dashboard({ user }) {
           )}
         </div>
 
-        <div className="card glass-panel" style={{ gridColumn: '1 / -1' }}>
-          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-             <TrendingUp size={24} className="logo-icon" style={{ color: '#8B5CF6' }} /> Weekly Activity Analytics
-          </h3>
-          <div style={{ height: '300px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={activityData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorSteps" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} />
-                <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
-                <Area type="monotone" dataKey="steps" stroke="#10B981" fillOpacity={1} fill="url(#colorSteps)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
         <div className="card glass-panel">
           <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
              <Target size={24} className="logo-icon" style={{ color: '#10B981' }} /> AI Challenges Tracker
@@ -368,6 +345,29 @@ export default function Dashboard({ user }) {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="card glass-panel" style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+             <TrendingUp size={24} className="logo-icon" style={{ color: '#8B5CF6' }} /> Weekly Activity Analytics
+          </h3>
+          <div style={{ height: '300px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={activityData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorSteps" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
+                <Area type="monotone" dataKey="steps" stroke="#10B981" fillOpacity={1} fill="url(#colorSteps)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
