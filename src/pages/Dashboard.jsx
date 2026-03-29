@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Activity, Zap, Award, MapPin, Sparkles, Target, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,18 +11,17 @@ export default function Dashboard({ user }) {
   const [myGroups, setMyGroups] = useState([]);
   const [currentSteps, setCurrentSteps] = useState(7432);
   const [hasCelebrated, setHasCelebrated] = useState(false);
+  const [confirmExitDialog, setConfirmExitDialog] = useState(null);
   const navigate = useNavigate();
 
   const handleExitGroup = async (groupId) => {
-    if (window.confirm("Do you want to exit group?")) {
-      try {
-        await axios.post(`https://paceboard-backend.onrender.com/api/groups/${groupId}/leave/${user.id}`);
-        setMyGroups(myGroups.filter(g => g.id !== groupId));
-      } catch (err) {
-        console.error("Failed to leave group:", err);
-        alert("Failed to exit group. Please try again.");
-      }
+    try {
+      await axios.post(`https://paceboard-backend.onrender.com/api/groups/${groupId}/leave/${user.id}`);
+      setMyGroups(myGroups.filter(g => g.id !== groupId));
+    } catch (err) {
+      console.error("Failed to leave group:", err);
     }
+    setConfirmExitDialog(null);
   };
 
   useEffect(() => {
@@ -193,7 +193,7 @@ export default function Dashboard({ user }) {
                     )}
                   </div>
                 </div>
-                <button className="btn-outline" onClick={() => handleExitGroup(g.id)} style={{ width: '100%', marginTop: '1rem', color: '#EF4444', borderColor: '#EF4444' }}>
+                <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ width: '100%', marginTop: '1rem', color: '#EF4444', borderColor: '#EF4444' }}>
                   Exit Group
                 </button>
               </div>
@@ -226,6 +226,20 @@ export default function Dashboard({ user }) {
           </div>
         </div>
       </div>
+
+      {confirmExitDialog && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 999999, padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', textAlign: 'center' }}>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--text-main)' }}>Leave Group?</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Are you sure you want to exit this group? You can always rejoin later if you change your mind.</p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-outline" onClick={() => setConfirmExitDialog(null)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold' }}>Cancel</button>
+              <button className="btn-primary" onClick={() => handleExitGroup(confirmExitDialog)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold', background: '#EF4444', color: 'white' }}>Yes, Exit</button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
     </div>
   );
 }

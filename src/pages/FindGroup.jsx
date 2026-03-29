@@ -12,6 +12,14 @@ export default function FindGroup({ user }) {
   const [myGroupIds, setMyGroupIds] = useState(new Set());
   const [newGroup, setNewGroup] = useState({ name: '', locality: user?.locality || '', preferredActivity: user?.preferredActivity || '' });
   const [isLocating, setIsLocating] = useState(false);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   const fetchGroups = async () => {
     try {
@@ -42,32 +50,36 @@ export default function FindGroup({ user }) {
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
-    if (!newGroup.name.trim() || !newGroup.locality.trim() || !newGroup.preferredActivity.trim()) return;
+    setIsCreatingGroup(true);
+    setFormError('');
     try {
-      await axios.post('https://paceboard-backend.onrender.com/api/groups', {
-        ...newGroup,
-        creatorId: user.id
-      });
+      await axios.post('https://paceboard-backend.onrender.com/api/groups', { ...newGroup, creatorId: user.id });
       setShowCreateModal(false);
       setNewGroup({ name: '', locality: user?.locality || '', preferredActivity: user?.preferredActivity || '' });
       fetchGroups();
       fetchMyGroups();
-      alert('Group created successfully! Check your Dashboard.');
+      showToast('Group created successfully! Check your Dashboard.', 'success');
     } catch (err) {
       console.error(err);
-      alert('Failed to create group');
+      if (err.response?.data === "Group name already exists") {
+        setFormError("Group name already exists, try new group names.");
+      } else {
+        setFormError('Failed to create group. Please try again later.');
+      }
+    } finally {
+      setIsCreatingGroup(false);
     }
   };
 
   const handleJoinGroup = async (groupId) => {
     try {
       await axios.post(`https://paceboard-backend.onrender.com/api/groups/${groupId}/join/${user.id}`);
-      alert('Joined group successfully! Check your Dashboard.');
+      showToast('Joined group successfully! Check your Dashboard.', 'success');
       fetchGroups();
       fetchMyGroups();
     } catch (err) {
       console.error(err);
-      alert('Failed to join group or you are already a member.');
+      showToast('Failed to join group or you are already a member.', 'error');
     }
   };
 
@@ -88,7 +100,7 @@ export default function FindGroup({ user }) {
     if (!window.confirm("Allow PaceBoard to access your precise location?")) return;
     
     if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser");
+        showToast("Geolocation is not supported by your browser", 'error');
         return;
     }
     setIsLocating(true);
@@ -102,17 +114,17 @@ export default function FindGroup({ user }) {
                 setIsLocating('success');
                 setTimeout(() => setIsLocating(false), 2500);
             } else {
-                alert("Could not determine city name from location.");
+                showToast("Could not determine city name from location.", 'error');
                 setIsLocating(false);
             }
         } catch (err) {
             console.error("Error getting location coordinates:", err);
-            alert("Failed to get location.");
+            showToast("Failed to get location.", 'error');
             setIsLocating(false);
         }
     }, () => {
         setIsLocating(false);
-        alert("Unable to retrieve your location. Please allow location permissions.");
+        showToast("Unable to retrieve your location. Please allow location permissions.", 'error');
     });
   };
 
@@ -178,8 +190,13 @@ export default function FindGroup({ user }) {
           <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '450px', padding: '2rem', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
               <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Create New Group</h2>
-              <button onClick={() => setShowCreateModal(false)} style={{ background: 'var(--surface)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+              <button type="button" onClick={() => setShowCreateModal(false)} style={{ background: 'var(--surface)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
             </div>
+            {formError && (
+              <div style={{ padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid #EF4444', fontSize: '0.9rem' }}>
+                {formError}
+              </div>
+            )}
             <form onSubmit={handleCreateGroup} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Group Name</label>
@@ -200,7 +217,9 @@ export default function FindGroup({ user }) {
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn-outline" style={{ flex: 1, padding: '1rem', fontSize: '1.1rem', fontWeight: 'bold', background: 'var(--surface)' }}>Cancel</button>
-                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Create Group</button>
+                <button type="submit" disabled={isCreatingGroup} className="btn-primary" style={{ flex: 1, padding: '1rem', fontSize: '1.1rem', fontWeight: 'bold', opacity: isCreatingGroup ? 0.7 : 1, cursor: isCreatingGroup ? 'wait' : 'pointer' }}>
+                  {isCreatingGroup ? 'Creating...' : 'Create Group'}
+                </button>
               </div>
             </form>
           </div>
@@ -251,6 +270,12 @@ export default function FindGroup({ user }) {
             </div>
             <button className="btn-primary" onClick={() => setDetailsModal(null)} style={{ marginTop: '1.5rem', width: '100%', padding: '1rem', fontWeight: 'bold' }}>Close Details</button>
           </div>
+        </div>
+      , document.body)}
+
+      {toast && createPortal(
+        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', background: toast.type === 'error' ? '#EF4444' : '#10B981', color: 'white', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)', zIndex: 9999999, display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }} className="animate-fade-in">
+          {toast.message}
         </div>
       , document.body)}
     </div>
