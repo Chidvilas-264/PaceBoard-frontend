@@ -8,6 +8,7 @@ export default function FindGroup({ user }) {
   const [filter, setFilter] = useState('locality');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [detailsModal, setDetailsModal] = useState(null);
+  const [groupMembers, setGroupMembers] = useState([]);
   const [newGroup, setNewGroup] = useState({ name: '', locality: user?.locality || '', preferredActivity: user?.preferredActivity || '' });
   const [isLocating, setIsLocating] = useState(false);
 
@@ -50,6 +51,19 @@ export default function FindGroup({ user }) {
     } catch (err) {
       console.error(err);
       alert('Failed to join group or you are already a member.');
+    }
+  };
+
+  const handleViewDetails = async (g) => {
+    setDetailsModal(g);
+    setGroupMembers([]); // reset
+    if (g.creatorId === user.id) {
+      try {
+        const res = await axios.get(`https://paceboard-backend.onrender.com/api/groups/${g.id}/members`);
+        setGroupMembers(res.data);
+      } catch (err) {
+        console.error("Failed to fetch group members:", err);
+      }
     }
   };
 
@@ -131,7 +145,7 @@ export default function FindGroup({ user }) {
               ) : (
                 <button className="btn-primary" style={{ flex: 1, opacity: 0.5, cursor: 'not-allowed', background: 'var(--surface)' }} disabled>Joined (Creator)</button>
               )}
-              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setDetailsModal(g)}>View Details</button>
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => handleViewDetails(g)}>View Details</button>
             </div>
           </div>
         ))}
@@ -192,9 +206,29 @@ export default function FindGroup({ user }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
                 <Search size={20} /> <span style={{ fontSize: '1.1rem' }}>Activity: {detailsModal.preferredActivity}</span>
               </div>
-              <p style={{ marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
-                Full member list visibility is restricted to group administrators to protect user privacy.
-              </p>
+              
+              {detailsModal.creatorId === user.id ? (
+                <div style={{ marginTop: '0.5rem', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
+                  <h4 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
+                    <Users size={16} /> Member Roster
+                  </h4>
+                  {groupMembers.length > 0 ? (
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {groupMembers.map(m => (
+                        <li key={m.id} style={{ padding: '0.5rem', background: 'var(--background)', borderRadius: '4px', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                          <strong>{m.name || m.username}</strong> <span style={{ color: 'var(--text-muted)' }}>• {m.locality}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Loading or no additional members yet.</p>
+                  )}
+                </div>
+              ) : (
+                <p style={{ marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
+                  Full member list visibility is restricted to group administrators to protect user privacy.
+                </p>
+              )}
             </div>
             <button className="btn-primary" onClick={() => setDetailsModal(null)} style={{ marginTop: '1.5rem', width: '100%', padding: '1rem', fontWeight: 'bold' }}>Close Details</button>
           </div>
