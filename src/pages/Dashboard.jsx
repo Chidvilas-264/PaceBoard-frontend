@@ -12,6 +12,18 @@ export default function Dashboard({ user }) {
   const [hasCelebrated, setHasCelebrated] = useState(false);
   const navigate = useNavigate();
 
+  const handleExitGroup = async (groupId) => {
+    if (window.confirm("Do you want to exit group?")) {
+      try {
+        await axios.post(`https://paceboard-backend.onrender.com/api/groups/${groupId}/leave/${user.id}`);
+        setMyGroups(myGroups.filter(g => g.id !== groupId));
+      } catch (err) {
+        console.error("Failed to leave group:", err);
+        alert("Failed to exit group. Please try again.");
+      }
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -167,16 +179,23 @@ export default function Dashboard({ user }) {
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Groups you have recently joined</p>
           {myGroups.length > 0 ? (
             myGroups.map(g => (
-              <div key={g.id} className="challenge-item" style={{ background: 'var(--background)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div key={g.id} className="challenge-item" style={{ background: 'var(--background)', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
                   <div style={{ background: 'var(--secondary)', color: 'white', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {(g.name || 'G').charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <h4 style={{ fontWeight: 600 }}>{g.name || 'Fitness Group'}</h4>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Member Since: {g.activeSince || 'recently'}</span>
+                    {g.activeSince && (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        Active since: {g.activeSince}
+                      </div>
+                    )}
                   </div>
                 </div>
+                <button className="btn-outline" onClick={() => handleExitGroup(g.id)} style={{ width: '100%', marginTop: '1rem', color: '#EF4444', borderColor: '#EF4444' }}>
+                  Exit Group
+                </button>
               </div>
             ))
           ) : (

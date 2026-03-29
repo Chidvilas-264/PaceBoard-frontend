@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { Search, MapPin, Users, Plus, X, Navigation } from 'lucide-react';
+import { Search, MapPin, Users, Plus, X, Navigation, CheckCircle } from 'lucide-react';
 
 export default function FindGroup({ user }) {
   const [groups, setGroups] = useState([]);
   const [filter, setFilter] = useState('locality');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [detailsModal, setDetailsModal] = useState(null);
   const [newGroup, setNewGroup] = useState({ name: '', locality: user?.locality || '', preferredActivity: user?.preferredActivity || '' });
   const [isLocating, setIsLocating] = useState(false);
 
@@ -53,6 +54,8 @@ export default function FindGroup({ user }) {
   };
 
   const handleUseCurrentLocation = () => {
+    if (!window.confirm("Allow PaceBoard to access your precise location?")) return;
+    
     if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser");
         return;
@@ -65,13 +68,15 @@ export default function FindGroup({ user }) {
             const city = res.data.city || res.data.locality || res.data.principalSubdivision;
             if (city) {
                 setNewGroup({ ...newGroup, locality: city });
+                setIsLocating('success');
+                setTimeout(() => setIsLocating(false), 2500);
             } else {
                 alert("Could not determine city name from location.");
+                setIsLocating(false);
             }
         } catch (err) {
             console.error("Error getting location coordinates:", err);
             alert("Failed to get location.");
-        } finally {
             setIsLocating(false);
         }
     }, () => {
@@ -121,8 +126,12 @@ export default function FindGroup({ user }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button className="btn-primary" style={{ flex: 1 }} onClick={() => handleJoinGroup(g.id)}>Join Group</button>
-              <button className="btn-outline" style={{ flex: 1 }}>View Details</button>
+              {g.creatorId !== user.id ? (
+                <button className="btn-primary" style={{ flex: 1 }} onClick={() => handleJoinGroup(g.id)}>Join Group</button>
+              ) : (
+                <button className="btn-primary" style={{ flex: 1, opacity: 0.5, cursor: 'not-allowed', background: 'var(--surface)' }} disabled>Joined (Creator)</button>
+              )}
+              <button className="btn-outline" style={{ flex: 1 }} onClick={() => setDetailsModal(g)}>View Details</button>
             </div>
           </div>
         ))}
@@ -147,8 +156,8 @@ export default function FindGroup({ user }) {
                 <label style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Locality</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <input type="text" value={newGroup.locality} onChange={e => setNewGroup({...newGroup, locality: e.target.value})} style={{ width: '100%', padding: '0.875rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', fontSize: '1rem' }} placeholder="e.g. Hyderabad" required />
-                  <button type="button" onClick={handleUseCurrentLocation} disabled={isLocating} style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', padding: '0 1rem', cursor: isLocating ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isLocating ? 0.7 : 1 }} title="Use Current GPS Location">
-                    <Navigation size={20} />
+                  <button type="button" onClick={handleUseCurrentLocation} disabled={isLocating === true} style={{ background: isLocating === 'success' ? '#10B981' : 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', padding: '0 1rem', cursor: isLocating === true ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isLocating === true ? 0.7 : 1, transition: 'all 0.3s' }} title="Use Current GPS Location">
+                    {isLocating === 'success' ? <CheckCircle size={20} className="animate-fade-in" /> : <Navigation size={20} />}
                   </button>
                 </div>
               </div>
@@ -161,6 +170,33 @@ export default function FindGroup({ user }) {
                 <button type="submit" className="btn-primary" style={{ flex: 1, padding: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Create Group</button>
               </div>
             </form>
+          </div>
+        </div>
+      , document.body)}
+
+      {detailsModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 999999, padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Group Details</h2>
+              <button onClick={() => setDetailsModal(null)} style={{ background: 'var(--surface)', border: 'none', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{detailsModal.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
+                <MapPin size={20} /> <span style={{ fontSize: '1.1rem' }}>Locality: {detailsModal.locality}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
+                <Users size={20} /> <span style={{ fontSize: '1.1rem' }}>Active Members: {detailsModal.totalMembers}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)' }}>
+                <Search size={20} /> <span style={{ fontSize: '1.1rem' }}>Activity: {detailsModal.preferredActivity}</span>
+              </div>
+              <p style={{ marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
+                Full member list visibility is restricted to group administrators to protect user privacy.
+              </p>
+            </div>
+            <button className="btn-primary" onClick={() => setDetailsModal(null)} style={{ marginTop: '1.5rem', width: '100%', padding: '1rem', fontWeight: 'bold' }}>Close Details</button>
           </div>
         </div>
       , document.body)}
