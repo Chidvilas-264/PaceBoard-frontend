@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { CheckSquare, Trash2, Plus, Clock, Target, Sparkles } from 'lucide-react';
+import { CheckSquare, Trash2, Plus, Clock, Target, Sparkles, Edit2, Check } from 'lucide-react';
 
 export default function Checklist({ user }) {
   const [tasks, setTasks] = useState([]);
@@ -8,6 +8,8 @@ export default function Checklist({ user }) {
   const [newTaskTime, setNewTaskTime] = useState('');
   const [taskAmpm, setTaskAmpm] = useState('AM');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editingTime, setEditingTime] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -78,6 +80,22 @@ export default function Checklist({ user }) {
         completed: !currentStatus
       });
       setTasks(tasks.map(t => t.id === id ? res.data : t));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const saveEditedTime = async (id) => {
+    try {
+      if(!editingTime.trim()) {
+        setEditingTaskId(null);
+        return;
+      }
+      const res = await axios.put(`https://paceboard-backend.onrender.com/api/checklist/${id}`, {
+        time: editingTime
+      });
+      setTasks(tasks.map(t => t.id === id ? res.data : t));
+      setEditingTaskId(null);
     } catch (err) {
       console.error(err);
     }
@@ -155,14 +173,43 @@ export default function Checklist({ user }) {
                     <input type="checkbox" checked={t.completed} onChange={() => toggleTask(t.id, t.completed)} style={{ width: 24, height: 24, cursor: 'pointer' }} />
                     <div>
                       <h4 style={{ fontSize: '1.2rem', textDecoration: t.completed ? 'line-through' : 'none' }}>{t.taskName}</h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-                        <Clock size={16} /> {t.time}
-                      </div>
+                      {editingTaskId === t.id ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                          <Clock size={16} style={{ color: 'var(--text-muted)' }} />
+                          <input 
+                            type="text" 
+                            value={editingTime} 
+                            onChange={(e) => setEditingTime(e.target.value)} 
+                            style={{ background: 'var(--background)', color: 'var(--text-main)', border: '1px solid var(--primary)', borderRadius: '4px', padding: '0.2rem 0.5rem', fontSize: '0.9rem', outline: 'none' }}
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveEditedTime(t.id);
+                              if (e.key === 'Escape') setEditingTaskId(null);
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
+                          <Clock size={16} /> {t.time}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <button onClick={() => deleteTask(t.id)} style={{ background: 'transparent', color: 'var(--error, #EF4444)', border: 'none', cursor: 'pointer', padding: '0.5rem' }}>
-                    <Trash2 size={20} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.2rem' }}>
+                    <button onClick={() => {
+                      if (editingTaskId === t.id) {
+                        saveEditedTime(t.id);
+                      } else {
+                        setEditingTaskId(t.id);
+                        setEditingTime(t.time);
+                      }
+                    }} style={{ background: 'transparent', color: editingTaskId === t.id ? '#10B981' : 'var(--text-muted)', border: 'none', cursor: 'pointer', padding: '0.5rem', transition: 'color 0.2s' }}>
+                      {editingTaskId === t.id ? <Check size={20} /> : <Edit2 size={20} />}
+                    </button>
+                    <button onClick={() => deleteTask(t.id)} style={{ background: 'transparent', color: 'var(--error, #EF4444)', border: 'none', cursor: 'pointer', padding: '0.5rem', transition: 'color 0.2s' }}>
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
