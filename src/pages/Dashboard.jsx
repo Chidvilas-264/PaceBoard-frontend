@@ -39,6 +39,13 @@ export default function Dashboard({ user }) {
     }
   ];
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}:${parts[1]}:${parts[0]}`;
+    return dateStr;
+  };
+
   const handleExitGroup = async (groupId) => {
     try {
       await axios.post(`https://paceboard-backend.onrender.com/api/groups/${groupId}/leave/${user.id}`);
@@ -213,7 +220,7 @@ export default function Dashboard({ user }) {
                     <h4 style={{ fontWeight: 600 }}>{g.name || 'Fitness Group'}</h4>
                     {g.activeSince && (
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        Active since: {g.activeSince}
+                        Active since: {formatDate(g.activeSince)}
                       </div>
                     )}
                   </div>
@@ -301,7 +308,7 @@ export default function Dashboard({ user }) {
               {selectedChallenge.status === 'available' ? (
                 <button className="btn-primary" onClick={() => { alert('Joined challenge! Goal tracking updated.'); setSelectedChallenge(null); }} style={{ flex: 1, padding: '1rem', fontWeight: 'bold', background: selectedChallenge.color }}>Accept Challenge</button>
               ) : (
-                <button className="btn-primary" onClick={() => { alert('Saved latest progress.'); setSelectedChallenge(null); }} style={{ flex: 1, padding: '1rem', fontWeight: 'bold', background: selectedChallenge.color }}>Log Progress</button>
+                <button className="btn-primary" onClick={() => { alert('Enrolled in challenge! Goal tracking updated.'); setSelectedChallenge(null); }} style={{ flex: 1, padding: '1rem', fontWeight: 'bold', background: selectedChallenge.color }}>Participate in Challenge</button>
               )}
             </div>
           </div>

@@ -16,6 +16,13 @@ export default function FindGroup({ user }) {
   const [formError, setFormError] = useState('');
   const [toast, setToast] = useState(null);
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}:${parts[1]}:${parts[0]}`;
+    return dateStr;
+  };
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -165,7 +172,7 @@ export default function FindGroup({ user }) {
             </div>
             {g.activeSince && (
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                Active since: {g.activeSince}
+                Active since: {formatDate(g.activeSince)}
               </div>
             )}
             <div style={{ display: 'flex', gap: '1rem' }}>

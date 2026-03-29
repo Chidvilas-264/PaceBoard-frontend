@@ -6,6 +6,7 @@ export default function Checklist({ user }) {
   const [tasks, setTasks] = useState([]);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskTime, setNewTaskTime] = useState('');
+  const [taskAmpm, setTaskAmpm] = useState('AM');
 
   useEffect(() => {
     if (user) {
@@ -25,10 +26,11 @@ export default function Checklist({ user }) {
   const addTask = async (e) => {
     e.preventDefault();
     if (!newTaskName.trim() || !newTaskTime.trim()) return;
+    const timeString = `${newTaskTime} ${taskAmpm}`;
     try {
       const res = await axios.post(`https://paceboard-backend.onrender.com/api/users/${user.id}/checklist`, {
         taskName: newTaskName,
-        time: newTaskTime,
+        time: timeString,
         completed: false
       });
       setTasks([...tasks, res.data]);
@@ -79,14 +81,18 @@ export default function Checklist({ user }) {
             style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)' }}
           />
         </div>
-        <div>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input 
             type="text" 
-            placeholder="e.g., 06:12 AM" 
+            placeholder="Time" 
             value={newTaskTime} 
             onChange={(e) => setNewTaskTime(e.target.value)} 
-            style={{ width: '130px', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)' }}
+            style={{ width: '90px', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)' }}
           />
+          <select value={taskAmpm} onChange={(e) => setTaskAmpm(e.target.value)} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 'bold' }}>
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
         </div>
         <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '100%' }}>
           <Plus size={20} /> Add Target
