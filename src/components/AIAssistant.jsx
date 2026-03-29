@@ -31,18 +31,10 @@ export default function AIAssistant() {
     setIsLoading(true);
 
     try {
-      // Split the API key to prevent GitHub secret scanning from blocking the push
-      const HUGGING_FACE_API_KEY = 'hf_' + 'rHhFdSSnJZpMafczhrrTbWvpubcMWfTXeE';
-      const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
-        headers: {
-          Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+      const response = await fetch("https://paceboard-backend.onrender.com/api/ai/chat", {
+        headers: { "Content-Type": "application/json" },
         method: "POST",
-        body: JSON.stringify({
-          inputs: `[INST] You are a highly motivating fitness coach. Answer in exactly 2 short sentences. User asks: ${userMessage.text} [/INST]`,
-          parameters: { max_new_tokens: 150, return_full_text: false }
-        }),
+        body: JSON.stringify({ message: userMessage.text }),
       });
 
       if (!response.ok) {
@@ -51,10 +43,7 @@ export default function AIAssistant() {
       }
 
       const result = await response.json();
-      let responseText = result[0]?.generated_text || "Keep pushing forward! I am here to motivate you.";
-      
-      // Clean up the text in case the model returns extra tokens
-      responseText = responseText.replace(/\[INST\].*?\[\/INST\]/g, '').trim();
+      const responseText = result.response || "Keep pushing forward! I am here to motivate you.";
 
       setMessages(prev => [...prev, { text: responseText, sender: 'ai' }]);
     } catch(err) {
