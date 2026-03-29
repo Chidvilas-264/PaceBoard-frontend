@@ -262,6 +262,7 @@ export default function Dashboard({ user }) {
                     )}
                   </div>
                 </div>
+                <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '1rem' }}>
                   <button className="btn-outline" onClick={() => handleViewGroup(g)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
                     View Details
                   </button>
