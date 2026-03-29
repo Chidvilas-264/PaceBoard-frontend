@@ -128,7 +128,7 @@ export default function FindGroup({ user }) {
         try {
             const { latitude, longitude } = position.coords;
             const res = await axios.get(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-            const city = res.data.city || res.data.locality || res.data.principalSubdivision;
+            const city = res.data.locality || res.data.city || res.data.principalSubdivision;
             if (city) {
                 setNewGroup({ ...newGroup, locality: city });
                 setIsLocating('success');
@@ -230,7 +230,7 @@ export default function FindGroup({ user }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Locality</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input type="text" value={newGroup.locality} onChange={e => setNewGroup({...newGroup, locality: e.target.value})} style={{ width: '100%', padding: '0.875rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', fontSize: '1rem' }} placeholder="e.g. Hyderabad" required />
+                  <input type="text" value={newGroup.locality} onChange={e => setNewGroup({...newGroup, locality: e.target.value})} style={{ width: '100%', padding: '0.875rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', fontSize: '1rem' }} placeholder="e.g. Ramnagar" required />
                   <button type="button" onClick={handleUseCurrentLocation} disabled={isLocating === true} style={{ background: isLocating === 'success' ? '#10B981' : 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', padding: '0 1rem', cursor: isLocating === true ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isLocating === true ? 0.7 : 1, transition: 'all 0.3s' }} title="Use Current GPS Location">
                     {isLocating === 'success' ? <CheckCircle size={20} className="animate-fade-in" /> : <Navigation size={20} />}
                   </button>
