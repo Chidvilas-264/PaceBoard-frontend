@@ -29,11 +29,15 @@ export default function Checklist({ user }) {
     const prompt = `As an elite AI fitness coach, generate a customized daily routine checklist for a user. User stats: Age: ${user.age || 25}, Gender: ${user.gender || 'unspecified'}, Weight: ${user.weight || 70}kg, Height: ${user.height || 170}cm. Please output ONLY a valid JSON array of objects in this EXACT format: [{"taskName": "Drink water", "time": "08:00 AM"}, {"taskName": "Morning run", "time": "08:30 AM"}]. Do not include any greeting, explanation, or markdown formatting like \`\`\`json. Just the raw array. Generate exactly 5 highly-effective fitness/health tasks spread throughout the day.`;
     try {
       const res = await axios.post(`https://paceboard-backend.onrender.com/api/ai/chat`, { message: prompt });
-      let output = res.data;
-      if(output.startsWith('\`\`\`')) {
-         output = output.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      let output = res.data.response;
+      
+      // Extract JSON array using regex in case the AI added conversational text
+      const jsonMatch = output.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+         throw new Error("Could not find a JSON array in the AI response");
       }
-      const routines = JSON.parse(output);
+      
+      const routines = JSON.parse(jsonMatch[0]);
       for (const item of routines) {
         await axios.post(`https://paceboard-backend.onrender.com/api/users/${user.id}/checklist`, {
           taskName: item.taskName || item.task,
