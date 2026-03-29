@@ -10,6 +10,7 @@ import Challenges from './pages/Challenges';
 import Settings from './pages/Settings';
 import Leaderboard from './pages/Leaderboard';
 import Checklist from './pages/Checklist';
+import AIAssistant from './components/AIAssistant';
 
 
 function App() {
@@ -91,6 +92,7 @@ function App() {
           <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>Contact Administrator: chidvilassai26@gmail.com | +91-8886422516</p>
         </footer>
         
+        <AIAssistant />
       </div>
   );
 }
