@@ -14,6 +14,14 @@ export default function AIAssistant() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -25,32 +33,35 @@ export default function AIAssistant() {
     try {
       // Split the API key to prevent GitHub secret scanning from blocking the push
       const HUGGING_FACE_API_KEY = 'hf_' + 'rHhFdSSnJZpMafczhrrTbWvpubcMWfTXeE';
-      const response = await fetch("https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta", {
+      const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
         headers: {
           Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
           "Content-Type": "application/json",
         },
         method: "POST",
         body: JSON.stringify({
-          inputs: `<|system|>\nYou are an elite, highly motivational fitness coach for the PaceBoard app. Answer strictly in 2 to 3 concise sentences. Do not use complex formatting.\n<|user|>\n${userMessage.text}\n<|assistant|>\n`,
-          parameters: { max_new_tokens: 100, return_full_text: false }
+          inputs: `[INST] You are a highly motivating fitness coach. Answer in exactly 2 short sentences. User asks: ${userMessage.text} [/INST]`,
+          parameters: { max_new_tokens: 150, return_full_text: false }
         }),
       });
 
       if (!response.ok) {
-        throw new Error("API request failed");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
       let responseText = result[0]?.generated_text || "Keep pushing forward! I am here to motivate you.";
       
       // Clean up the text in case the model returns extra tokens
-      responseText = responseText.replace(/<\|.*?\|>/g, '').trim();
+      responseText = responseText.replace(/\[INST\].*?\[\/INST\]/g, '').trim();
 
       setMessages(prev => [...prev, { text: responseText, sender: 'ai' }]);
     } catch(err) {
       console.error(err);
-      setMessages(prev => [...prev, { text: "Oh no! My AI brain hit a snag. Please try again in an hour.", sender: 'ai' }]);
+      let errMsg = err.message;
+      if (errMsg.includes("loading")) errMsg = "Please wait a moment, my brain is zooming into action! Try again in 10 seconds.";
+      setMessages(prev => [...prev, { text: `Oh no! My AI brain hit a snag: ${errMsg}`, sender: 'ai' }]);
     } finally {
       setIsLoading(false);
     }
