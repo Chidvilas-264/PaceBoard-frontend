@@ -14,7 +14,8 @@ export default function Settings({ user, setUser, setTheme, handleLogout }) {
     age: user?.age || '',
     gender: user?.gender || '',
     locality: user?.locality || '',
-    preferredActivity: user?.preferredActivity || 'Walk'
+    preferredActivity: user?.preferredActivity || 'Walk',
+    privateProfile: user?.privateProfile || false
   });
   const [success, setSuccess] = useState('');
 
@@ -159,6 +160,36 @@ export default function Settings({ user, setUser, setTheme, handleLogout }) {
               </button>
             </div>
           </div>
+        </div>
+
+        <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: '2rem 0' }} />
+
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Privacy Controls</h2>
+        <div className="card" style={{ background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', marginBottom: '2rem', borderRadius: '12px' }}>
+           <div>
+             <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+               Make Profile Private
+             </h4>
+             <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+               When active, other users won't see you in the "Challenge Members" tab to invite or challenge you. 
+             </p>
+           </div>
+           <div>
+              <label style={{ position: 'relative', display: 'inline-block', width: '60px', height: '34px' }}>
+                 <input type="checkbox" style={{ opacity: 0, width: 0, height: 0 }} checked={formData.privateProfile} onChange={(e) => setFormData({ ...formData, privateProfile: e.target.checked })} />
+                 <span style={{
+                    position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: formData.privateProfile ? '#10B981' : 'var(--border)', 
+                    transition: '.4s', borderRadius: '34px'
+                 }}>
+                    <span style={{
+                       position: 'absolute', height: '26px', width: '26px', left: '4px', bottom: '4px',
+                       backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                       transform: formData.privateProfile ? 'translateX(26px)' : 'translateX(0)'
+                    }}></span>
+                 </span>
+              </label>
+           </div>
         </div>
 
         <button type="submit" className="btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.125rem' }}>

@@ -8,7 +8,6 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import FitnessMap from '../components/FitnessMap';
-import FitnessMap from '../components/FitnessMap';
 
 export default function Dashboard({ user }) {
   const [suggestedGroups, setSuggestedGroups] = useState([]);
