@@ -32,7 +32,7 @@ export default function FindGroup({ user }) {
     try {
       const url = `https://paceboard-backend.onrender.com/api/groups?${filter}=${filter === 'locality' ? user.locality : user.preferredActivity}`;
       const res = await axios.get(url);
-      setGroups(res.data);
+      setGroups(res.data.filter(g => g.totalMembers != null && g.totalMembers > 0));
     } catch (err) {
       console.error("Failed to fetch groups", err);
     }
@@ -99,7 +99,7 @@ export default function FindGroup({ user }) {
       fetchMyGroups();
     } catch (err) {
       console.error(err);
-      showToast('You must be the admin/creator to delete this group.', 'error');
+      showToast('Failed to delete group or backend is still updating. Please wait a minute and try again.', 'error');
     }
   };
 

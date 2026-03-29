@@ -64,7 +64,7 @@ export default function Dashboard({ user }) {
       setSuggestedGroups(suggestedGroups.filter(g => g.id !== groupId));
     } catch (err) {
       console.error("Failed to permanently delete group:", err);
-      alert("Failed to delete group. Ensure you are the creator.");
+      alert("Failed to delete group or the backend is still updating. Please wait a minute and try again.");
     }
     setConfirmDeleteGroupDialog(null);
   };
@@ -77,9 +77,9 @@ export default function Dashboard({ user }) {
     const fetchGroups = async () => {
       try {
         const localityRes = await axios.get(`https://paceboard-backend.onrender.com/api/groups?locality=${user.locality}`);
-        setSuggestedGroups(localityRes.data);
+        setSuggestedGroups(localityRes.data.filter(g => g.totalMembers != null && g.totalMembers > 0));
         const myGrpRes = await axios.get(`https://paceboard-backend.onrender.com/api/users/${user.id}/groups`);
-        setMyGroups(myGrpRes.data);
+        setMyGroups(myGrpRes.data.filter(g => g.totalMembers != null && g.totalMembers > 0));
       } catch (err) {
         console.error(err);
       }
