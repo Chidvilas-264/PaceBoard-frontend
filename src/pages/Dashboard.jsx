@@ -14,6 +14,8 @@ export default function Dashboard({ user }) {
   const [confirmExitDialog, setConfirmExitDialog] = useState(null);
   const [confirmDeleteGroupDialog, setConfirmDeleteGroupDialog] = useState(null);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
+  const [selectedGroupDetails, setSelectedGroupDetails] = useState(null);
+  const [groupMembers, setGroupMembers] = useState([]);
   const navigate = useNavigate();
 
   const challengesList = [
@@ -67,6 +69,25 @@ export default function Dashboard({ user }) {
       alert("Failed to delete group or the backend is still updating. Please wait a minute and try again.");
     }
     setConfirmDeleteGroupDialog(null);
+  };
+
+  const handleViewGroup = async (group) => {
+    setSelectedGroupDetails(group);
+    try {
+      const res = await axios.get(`https://paceboard-backend.onrender.com/api/groups/${group.id}/members`);
+      setGroupMembers(res.data);
+    } catch (error) {
+      console.error("Failed to fetch group members", error);
+    }
+  };
+
+  const handleRemoveMember = async (groupId, memberId) => {
+    try {
+      await axios.post(`https://paceboard-backend.onrender.com/api/groups/${groupId}/leave/${memberId}`);
+      setGroupMembers(groupMembers.filter(m => m.id !== memberId));
+    } catch (error) {
+      console.error("Failed to remove member", error);
+    }
   };
 
   useEffect(() => {
@@ -241,13 +262,15 @@ export default function Dashboard({ user }) {
                     )}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '1rem' }}>
+                  <button className="btn-outline" onClick={() => handleViewGroup(g)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
+                    View Details
+                  </button>
                   <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
                     Exit Group
                   </button>
                   {g.creatorId === user.id && (
                     <button className="btn-outline" onClick={() => setConfirmDeleteGroupDialog(g.id)} style={{ flex: 1, color: '#EF4444', borderColor: '#EF4444' }}>
-                      Delete Group
+                      Delete
                     </button>
                   )}
                 </div>
@@ -347,6 +370,58 @@ export default function Dashboard({ user }) {
                 <button className="btn-primary" onClick={() => { alert('Enrolled in challenge! Goal tracking updated.'); setSelectedChallenge(null); }} style={{ flex: 1, padding: '1rem', fontWeight: 'bold', background: selectedChallenge.color }}>Participate in Challenge</button>
               )}
             </div>
+          </div>
+        </div>
+      , document.body)}
+
+      {selectedGroupDetails && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 999999, padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '500px', padding: '2rem', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {selectedGroupDetails.name}
+                  {selectedGroupDetails.creatorId === user.id && <span style={{ fontSize: '0.7rem', background: '#3b82f6', padding: '0.1rem 0.4rem', borderRadius: '4px', color: 'white' }}>ADMIN</span>}
+                </h3>
+                <p style={{ color: 'var(--text-muted)' }}><MapPin size={16} style={{display: 'inline', marginRight: '4px'}}/>{selectedGroupDetails.locality} • {selectedGroupDetails.preferredActivity}</p>
+              </div>
+              <button className="btn-primary" onClick={() => navigate('/challenges', { state: { challengeGroup: selectedGroupDetails } })} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                Challenge Group
+              </button>
+            </div>
+            
+            <div style={{ overflowY: 'auto', flex: 1, marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+              <h4 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Members ({groupMembers.length})</h4>
+              {groupMembers.map(member => (
+                <div key={member.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--surface)', borderRadius: '8px', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                      {member.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{member.name} {member.id === selectedGroupDetails.creatorId && "(Creator)"}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{member.preferredActivity} Enthusiast</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {member.id !== user.id && (
+                      <button className="btn-outline" onClick={() => navigate('/challenges', { state: { challengeUser: member } })} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderColor: '#F59E0B', color: '#F59E0B' }}>
+                        Challenge
+                      </button>
+                    )}
+                    {selectedGroupDetails.creatorId === user.id && member.id !== user.id && (
+                      <button className="btn-outline" onClick={() => handleRemoveMember(selectedGroupDetails.id, member.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderColor: '#EF4444', color: '#EF4444' }}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button className="btn-outline" onClick={() => setSelectedGroupDetails(null)} style={{ width: '100%', padding: '0.75rem', marginTop: '1rem', fontWeight: 'bold' }}>
+              Close
+            </button>
           </div>
         </div>
       , document.body)}
