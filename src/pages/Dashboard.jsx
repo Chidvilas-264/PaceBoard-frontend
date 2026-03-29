@@ -12,7 +12,32 @@ export default function Dashboard({ user }) {
   const [currentSteps, setCurrentSteps] = useState(7432);
   const [hasCelebrated, setHasCelebrated] = useState(false);
   const [confirmExitDialog, setConfirmExitDialog] = useState(null);
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
   const navigate = useNavigate();
+
+  const challengesList = [
+    {
+      id: 1,
+      title: "Elite Marathon Prep (High Intensity)",
+      difficulty: "Advanced",
+      status: "available",
+      description: "A grueling 4-week program designed by AI to push your stamina to marathon levels. Includes interval training, long steady runs, and rigorous recovery protocols.",
+      taken: 1420,
+      completed: 312,
+      color: '#EF4444'
+    },
+    {
+      id: 2,
+      title: "10K Step Weekathon",
+      difficulty: "Intermediate",
+      status: "active",
+      endDate: "Ends in 3 days",
+      description: "Hit 10,000 steps every single day for 7 days straight. This challenge adapts to your walking speed and predicts your daily completion time.",
+      taken: 8430,
+      completed: 5102,
+      color: '#10B981'
+    }
+  ];
 
   const handleExitGroup = async (groupId) => {
     try {
@@ -203,26 +228,29 @@ export default function Dashboard({ user }) {
           )}
         </div>
         
-        <div className="card">
+        <div className="card glass-panel">
           <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
              <Target size={24} className="logo-icon" style={{ color: '#10B981' }} /> AI Challenges Tracker
           </h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Dynamically tailored to your {monthlySteps.toLocaleString()} monthly steps!</p>
-          
-          <div className="challenge-item" style={{ borderLeft: `5px solid ${aiChallenge.color}` }}>
-            <div>
-              <h4 style={{ fontWeight: 600 }}>{aiChallenge.name}</h4>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>Difficulty: {aiChallenge.diff}</span>
-            </div>
-            <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>Join</button>
-          </div>
-
-          <div className="challenge-item">
-            <div>
-              <h4 style={{ fontWeight: 600 }}>10K Step Weekathon</h4>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Ends in 3 days</span>
-            </div>
-            <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>View</button>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Dynamically tailored to your 120,500 monthly steps!</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {challengesList.map(challenge => (
+              <div key={challenge.id} style={{ background: 'var(--surface)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)', borderLeft: `4px solid ${challenge.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.2s', cursor: 'pointer' }} onClick={() => setSelectedChallenge(challenge)}>
+                <div>
+                  <h4 style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>{challenge.title}</h4>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: challenge.status === 'available' ? 'bold' : 'normal' }}>
+                    {challenge.status === 'available' ? `Difficulty: ${challenge.difficulty}` : challenge.endDate}
+                  </div>
+                </div>
+                <button 
+                  className={challenge.status === 'available' ? 'btn-primary' : 'btn-secondary'} 
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: challenge.status === 'active' ? challenge.color : undefined }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedChallenge(challenge); }}
+                >
+                  {challenge.status === 'available' ? 'Join' : 'View'}
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -235,6 +263,46 @@ export default function Dashboard({ user }) {
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button className="btn-outline" onClick={() => setConfirmExitDialog(null)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold' }}>Cancel</button>
               <button className="btn-primary" onClick={() => handleExitGroup(confirmExitDialog)} style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold', background: '#EF4444', color: 'white' }}>Yes, Exit</button>
+            </div>
+          </div>
+        </div>
+      , document.body)}
+
+      {selectedChallenge && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 999999, padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '450px', padding: '2.5rem', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${selectedChallenge.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selectedChallenge.color }}>
+                <Target size={24} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.3rem', margin: 0, color: 'var(--text-main)' }}>{selectedChallenge.title}</h3>
+                <span style={{ fontSize: '0.85rem', color: selectedChallenge.color, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedChallenge.difficulty} DIFFICULTY</span>
+              </div>
+            </div>
+            
+            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '2rem', fontSize: '0.95rem' }}>
+              {selectedChallenge.description}
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', background: 'var(--surface)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{selectedChallenge.taken.toLocaleString()}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Participants</div>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10B981' }}>{selectedChallenge.completed.toLocaleString()}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Completed</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-outline" onClick={() => setSelectedChallenge(null)} style={{ flex: 1, padding: '1rem', fontWeight: 'bold' }}>Close</button>
+              {selectedChallenge.status === 'available' ? (
+                <button className="btn-primary" onClick={() => { alert('Joined challenge! Goal tracking updated.'); setSelectedChallenge(null); }} style={{ flex: 1, padding: '1rem', fontWeight: 'bold', background: selectedChallenge.color }}>Accept Challenge</button>
+              ) : (
+                <button className="btn-primary" onClick={() => { alert('Saved latest progress.'); setSelectedChallenge(null); }} style={{ flex: 1, padding: '1rem', fontWeight: 'bold', background: selectedChallenge.color }}>Log Progress</button>
+              )}
             </div>
           </div>
         </div>
