@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { Activity, Zap, Award, MapPin, Sparkles, Target, Users } from 'lucide-react';
+import { Activity, Zap, Award, MapPin, Sparkles, Target, Users, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
+import FitnessMap from '../components/FitnessMap';
 import FitnessMap from '../components/FitnessMap';
 
 export default function Dashboard({ user }) {
@@ -18,10 +22,19 @@ export default function Dashboard({ user }) {
   const [groupMembers, setGroupMembers] = useState([]);
   const [activeChatGroup, setActiveChatGroup] = useState(null);
   const [chatMessage, setChatMessage] = useState('');
-  const [chatHistory, setChatHistory] = useState([
-    { text: "Welcome to the group chat!", sender: 'system' }
-  ]);
+  const [chatHistory, setChatHistory] = useState([]);
+  const stompClient = useRef(null);
   const navigate = useNavigate();
+
+  const activityData = [
+    { name: 'Mon', steps: 6000, calories: 1800 },
+    { name: 'Tue', steps: 8000, calories: 2100 },
+    { name: 'Wed', steps: 7500, calories: 1950 },
+    { name: 'Thu', steps: 10000, calories: 2500 },
+    { name: 'Fri', steps: 12000, calories: 2800 },
+    { name: 'Sat', steps: 15000, calories: 3100 },
+    { name: 'Sun', steps: 7432, calories: 1900 },
+  ];
 
   const challengesList = [
     {
@@ -271,7 +284,27 @@ export default function Dashboard({ user }) {
                   <button className="btn-outline" onClick={() => handleViewGroup(g)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
                     View Details
                   </button>
-                  <button className="btn-primary" onClick={() => { setActiveChatGroup(g); setChatHistory([{ text: `Welcome to the ${g.name} chat!`, sender: 'system' }]); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={async () => { 
+                    setActiveChatGroup(g); 
+                    try {
+                      const res = await axios.get(`https://paceboard-backend.onrender.com/api/chat/${g.id}`);
+                      setChatHistory(res.data.map(msg => ({ text: msg.content, sender: msg.senderId === user.id ? 'user' : 'other', senderName: msg.senderName })));
+                    } catch (e) {
+                      setChatHistory([{ text: `Welcome to the ${g.name} chat!`, sender: 'system' }]);
+                    }
+                    if (stompClient.current) stompClient.current.deactivate();
+                    const client = new Client({
+                      webSocketFactory: () => new SockJS('https://paceboard-backend.onrender.com/ws'),
+                      onConnect: () => {
+                        client.subscribe(`/topic/group/${g.id}`, (msg) => {
+                          const newMsg = JSON.parse(msg.body);
+                          setChatHistory(prev => [...prev, { text: newMsg.content, sender: newMsg.senderId === user.id ? 'user' : 'other', senderName: newMsg.senderName }]);
+                        });
+                      }
+                    });
+                    client.activate();
+                    stompClient.current = client;
+                  }} style={{ flex: 1 }}>
                     Group Chat
                   </button>
                   <button className="btn-outline" onClick={() => setConfirmExitDialog(g.id)} style={{ flex: 1, color: 'var(--text-main)', borderColor: 'var(--border)' }}>
@@ -288,6 +321,29 @@ export default function Dashboard({ user }) {
           ) : (
             <p style={{ color: 'var(--text-muted)' }}>You haven't joined any groups yet. Explore and join to see them here.</p>
           )}
+        </div>
+
+        <div className="card glass-panel" style={{ gridColumn: '1 / -1' }}>
+          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+             <TrendingUp size={24} className="logo-icon" style={{ color: '#8B5CF6' }} /> Weekly Activity Analytics
+          </h3>
+          <div style={{ height: '300px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={activityData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorSteps" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-main)' }} itemStyle={{ color: 'var(--text-main)' }} />
+                <Area type="monotone" dataKey="steps" stroke="#10B981" fillOpacity={1} fill="url(#colorSteps)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
         
         <div className="card glass-panel">
@@ -438,12 +494,13 @@ export default function Dashboard({ user }) {
           <div className="card glass-panel animate-fade-in" style={{ background: 'var(--background)', width: '100%', maxWidth: '400px', height: '500px', padding: 0, borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '1rem', background: 'var(--surface)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--text-main)' }}>{activeChatGroup.name} Chat</div>
-              <button className="btn-outline" style={{ padding: '0.2rem 0.6rem', borderColor: 'var(--border)', color: 'var(--text-main)' }} onClick={() => setActiveChatGroup(null)}>Close</button>
+              <button className="btn-outline" style={{ padding: '0.2rem 0.6rem', borderColor: 'var(--border)', color: 'var(--text-main)' }} onClick={() => { setActiveChatGroup(null); if(stompClient.current) stompClient.current.deactivate(); }}>Close</button>
             </div>
             <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {chatHistory.map((msg, idx) => (
-                <div key={idx} style={{ textAlign: msg.sender === 'user' ? 'right' : 'center', width: '100%' }}>
-                  <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '12px', background: msg.sender === 'user' ? 'var(--primary)' : 'var(--surface)', color: msg.sender === 'user' ? 'white' : 'var(--text-muted)', fontSize: msg.sender === 'system' ? '0.8rem' : '1rem', maxWidth: '80%', wordBreak: 'break-word' }}>
+                <div key={idx} style={{ textAlign: msg.sender === 'user' ? 'right' : 'left', width: '100%' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>{msg.sender === 'user' ? 'You' : msg.senderName || 'System'}</div>
+                  <div style={{ display: 'inline-block', padding: '0.5rem 1rem', borderRadius: '12px', background: msg.sender === 'user' ? 'var(--primary)' : 'var(--surface)', color: msg.sender === 'user' ? 'white' : 'var(--text-main)', fontSize: msg.sender === 'system' ? '0.8rem' : '1rem', maxWidth: '80%', wordBreak: 'break-word', textAlign: 'left' }}>
                     {msg.text}
                   </div>
                 </div>
@@ -452,16 +509,22 @@ export default function Dashboard({ user }) {
             <div style={{ padding: '0.8rem', background: 'var(--surface)', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem' }}>
               <input type="text" className="input-field" placeholder="Type a message..." value={chatMessage} onChange={e => setChatMessage(e.target.value)} onKeyDown={(e) => {
                 if (e.key === 'Enter' && chatMessage.trim()) {
-                  setChatHistory([...chatHistory, { text: chatMessage, sender: 'user' }]);
+                  if (stompClient.current && stompClient.current.connected) {
+                    stompClient.current.publish({ destination: `/app/chat/${activeChatGroup.id}`, body: JSON.stringify({ senderId: user.id, senderName: user.name, content: chatMessage }) });
+                  } else {
+                    setChatHistory([...chatHistory, { text: chatMessage, sender: 'user' }]);
+                  }
                   setChatMessage('');
-                  setTimeout(() => setChatHistory(prev => [...prev, { text: '👍', sender: 'system' }]), 1500);
                 }
               }} style={{ flex: 1, margin: 0 }} />
               <button className="btn-primary" onClick={() => {
                 if (chatMessage.trim()) {
-                  setChatHistory([...chatHistory, { text: chatMessage, sender: 'user' }]);
+                  if (stompClient.current && stompClient.current.connected) {
+                    stompClient.current.publish({ destination: `/app/chat/${activeChatGroup.id}`, body: JSON.stringify({ senderId: user.id, senderName: user.name, content: chatMessage }) });
+                  } else {
+                    setChatHistory([...chatHistory, { text: chatMessage, sender: 'user' }]);
+                  }
                   setChatMessage('');
-                  setTimeout(() => setChatHistory(prev => [...prev, { text: '👍', sender: 'system' }]), 1500);
                 }
               }}>Send</button>
             </div>
