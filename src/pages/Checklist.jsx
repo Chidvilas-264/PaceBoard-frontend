@@ -5,7 +5,9 @@ import { CheckSquare, Trash2, Plus, Clock, Target } from 'lucide-react';
 export default function Checklist({ user }) {
   const [tasks, setTasks] = useState([]);
   const [newTaskName, setNewTaskName] = useState('');
-  const [newTaskTime, setNewTaskTime] = useState('');
+  const [taskHour, setTaskHour] = useState('06');
+  const [taskMinute, setTaskMinute] = useState('00');
+  const [taskAmpm, setTaskAmpm] = useState('AM');
 
   useEffect(() => {
     if (user) {
@@ -24,16 +26,17 @@ export default function Checklist({ user }) {
 
   const addTask = async (e) => {
     e.preventDefault();
-    if (!newTaskName.trim() || !newTaskTime.trim()) return;
+    if (!newTaskName.trim()) return;
+    const timeString = `${taskHour}:${taskMinute} ${taskAmpm}`;
     try {
       const res = await axios.post(`https://paceboard-backend.onrender.com/api/users/${user.id}/checklist`, {
         taskName: newTaskName,
-        time: newTaskTime,
+        time: timeString,
         completed: false
       });
       setTasks([...tasks, res.data]);
       setNewTaskName('');
-      setNewTaskTime('');
+      // reset time if desired, or leave it for consecutive tasks
     } catch (err) {
       console.error(err);
     }
@@ -79,13 +82,18 @@ export default function Checklist({ user }) {
             style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)' }}
           />
         </div>
-        <div>
-          <input 
-            type="time" 
-            value={newTaskTime} 
-            onChange={(e) => setNewTaskTime(e.target.value)} 
-            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)' }}
-          />
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <select value={taskHour} onChange={e => setTaskHour(e.target.value)} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', cursor: 'pointer' }}>
+            {Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
+          </select>
+          <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>:</span>
+          <select value={taskMinute} onChange={e => setTaskMinute(e.target.value)} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', cursor: 'pointer' }}>
+            {['00', '15', '30', '45'].map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select value={taskAmpm} onChange={e => setTaskAmpm(e.target.value)} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-main)', marginLeft: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
         </div>
         <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '100%' }}>
           <Plus size={20} /> Add Target

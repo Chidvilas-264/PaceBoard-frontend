@@ -9,21 +9,36 @@ export default function FindGroup({ user }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [detailsModal, setDetailsModal] = useState(null);
   const [groupMembers, setGroupMembers] = useState([]);
+  const [myGroupIds, setMyGroupIds] = useState(new Set());
   const [newGroup, setNewGroup] = useState({ name: '', locality: user?.locality || '', preferredActivity: user?.preferredActivity || '' });
   const [isLocating, setIsLocating] = useState(false);
 
-  useEffect(() => {
-    if (user) fetchGroups();
-  }, [user, filter]);
-
   const fetchGroups = async () => {
     try {
-      const res = await axios.get(`https://paceboard-backend.onrender.com/api/groups?${filter}=${filter === 'locality' ? user.locality : user.preferredActivity}`);
+      const url = `https://paceboard-backend.onrender.com/api/groups?${filter}=${filter === 'locality' ? user.locality : user.preferredActivity}`;
+      const res = await axios.get(url);
       setGroups(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch groups", err);
     }
   };
+
+  const fetchMyGroups = async () => {
+    if (!user) return;
+    try {
+      const res = await axios.get(`https://paceboard-backend.onrender.com/api/users/${user.id}/groups`);
+      setMyGroupIds(new Set(res.data.map(g => g.id)));
+    } catch(err) {
+      console.error("Failed to fetch my groups:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchGroups();
+      fetchMyGroups();
+    }
+  }, [user, filter]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -36,7 +51,8 @@ export default function FindGroup({ user }) {
       setShowCreateModal(false);
       setNewGroup({ name: '', locality: user?.locality || '', preferredActivity: user?.preferredActivity || '' });
       fetchGroups();
-      alert('Group created successfully!');
+      fetchMyGroups();
+      alert('Group created successfully! Check your Dashboard.');
     } catch (err) {
       console.error(err);
       alert('Failed to create group');
@@ -48,6 +64,7 @@ export default function FindGroup({ user }) {
       await axios.post(`https://paceboard-backend.onrender.com/api/groups/${groupId}/join/${user.id}`);
       alert('Joined group successfully! Check your Dashboard.');
       fetchGroups();
+      fetchMyGroups();
     } catch (err) {
       console.error(err);
       alert('Failed to join group or you are already a member.');
@@ -140,10 +157,12 @@ export default function FindGroup({ user }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: '1rem' }}>
-              {g.creatorId !== user.id ? (
-                <button className="btn-primary" style={{ flex: 1 }} onClick={() => handleJoinGroup(g.id)}>Join Group</button>
+              {myGroupIds.has(g.id) ? (
+                <button className="btn-primary" style={{ flex: 1, opacity: 0.5, cursor: 'not-allowed', background: 'var(--surface)' }} disabled>
+                  {g.creatorId === user.id ? 'Joined (Admin)' : 'Joined'}
+                </button>
               ) : (
-                <button className="btn-primary" style={{ flex: 1, opacity: 0.5, cursor: 'not-allowed', background: 'var(--surface)' }} disabled>Joined (Creator)</button>
+                <button className="btn-primary" style={{ flex: 1 }} onClick={() => handleJoinGroup(g.id)}>Join Group</button>
               )}
               <button className="btn-outline" style={{ flex: 1 }} onClick={() => handleViewDetails(g)}>View Details</button>
             </div>
