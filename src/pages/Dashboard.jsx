@@ -136,7 +136,9 @@ export default function Dashboard({ user }) {
         const localityRes = await axios.get(`https://paceboard-backend.onrender.com/api/groups?locality=${user.locality}`);
         setSuggestedGroups(localityRes.data.filter(g => g.totalMembers != null && g.totalMembers > 0));
         const myGrpRes = await axios.get(`https://paceboard-backend.onrender.com/api/users/${user.id}/groups`);
-        setMyGroups(myGrpRes.data.filter(g => g.totalMembers != null && g.totalMembers > 0));
+        // Remove duplicates if any
+        const uniqueGroups = Array.from(new Map(myGrpRes.data.map(g => [g.id, g])).values());
+        setMyGroups(uniqueGroups.filter(g => g.totalMembers != null && g.totalMembers > 0));
       } catch (err) {
         console.error(err);
       }
