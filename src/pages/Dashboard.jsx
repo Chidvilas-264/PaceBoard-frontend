@@ -177,13 +177,6 @@ export default function Dashboard({ user }) {
           <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Welcome back, {user.name}!</h1>
           <p style={{ color: 'var(--text-muted)' }}>Keep up the great work. You're doing amazing.</p>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem' }}>
-          <Zap size={32} color="var(--primary)" />
-          <div>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Fitness Streak</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{user.fitnessStreak || 12} Days</div>
-          </div>
-        </div>
       </div>
 
       <div className="card glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--surface)' }}>
