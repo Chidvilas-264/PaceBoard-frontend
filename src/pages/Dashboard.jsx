@@ -208,6 +208,20 @@ export default function Dashboard({ user }) {
           <p style={{ color: 'var(--secondary)', marginTop: '0.5rem', fontWeight: 'bold' }}>+12% from last month</p>
         </div>
 
+        <div className="card glass-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ color: '#8B5CF6' }}>
+              <Zap size={48} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>Fitness Streak</h3>
+              <div style={{ fontSize: '3rem', fontWeight: '900', marginTop: '0.2rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem', color: 'var(--text-main)' }}>
+                 {user.fitnessStreak || 12} <span style={{ fontSize: '1.5rem', fontWeight: '700' }}>Days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="card glass-panel">
           <h3 className="card-title"><Award className="logo-icon" size={24} /> Trophy Case</h3>
           <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem' }}>
@@ -232,31 +246,8 @@ export default function Dashboard({ user }) {
       </div>
 
       <div className="dashboard-grid" style={{ marginTop: '2rem' }}>
-        <div className="card">
+        <div className="card glass-panel" style={{ gridColumn: '1 / -1' }}>
           <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-             <Sparkles size={24} className="logo-icon" style={{ color: '#F59E0B' }}/> AI Group Suggestions
-          </h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Curated based on your locality ({user.locality}) & {user.preferredActivity} preference</p>
-          {suggestedGroups.length > 0 ? (
-            suggestedGroups.map(g => (
-              <div key={g.id} className="challenge-item">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ background: 'var(--primary)', color: 'white', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {(g.name || 'G').charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h4 style={{ fontWeight: 600 }}>{g.name || 'Fitness Group'}</h4>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{g.totalMembers} Members</span>
-                  </div>
-                </div>
-                <button className="btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => navigate('/groups')}>View</button>
-              </div>
-            ))
-          ) : (
-            <p>Scanning global servers for nearby communities... Invite friends to start one!</p>
-          )}
-
-          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '2rem' }}>
              <Users size={24} className="logo-icon" style={{ color: 'var(--primary)' }}/> My Groups
           </h3>
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Groups you have recently joined</p>
